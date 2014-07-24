@@ -14,15 +14,16 @@ Supports both the 32bit and 64bit versions of the the algorithm.
 
 ## Benchmark
 
-``` go test github.com/OneOfOne/xxhash -bench=. -benchmem ```
+    go test github.com/OneOfOne/xxhash -bench=. -benchmem
 
 Core i5-750 @ 2.67GHz, Linux 3.15.6 (64bit)
 
-``` BenchmarkXxhash64 3000000 472 ns/op 0 B/op 0 allocs/op BenchmarkXxhash32
-2000000 725 ns/op 0 B/op 0 allocs/op BenchmarkFnv32 1000000 2004 ns/op 2816 B/op
-1 allocs/op BenchmarkFnv64 1000000 2022 ns/op 2816 B/op 1 allocs/op
-BenchmarkAdler32 500000 2618 ns/op 0 B/op 0 allocs/op BenchmarkCRC32IEEE 200000
-8659 ns/op 0 B/op 0 allocs/op ```
+    BenchmarkXxhash64        3000000               472 ns/op               0 B/op          0 allocs/op
+    BenchmarkXxhash32        2000000               725 ns/op               0 B/op          0 allocs/op
+    BenchmarkFnv32           1000000              2004 ns/op            2816 B/op          1 allocs/op
+    BenchmarkFnv64           1000000              2022 ns/op            2816 B/op          1 allocs/op
+    BenchmarkAdler32          500000              2618 ns/op               0 B/op          0 allocs/op
+    BenchmarkCRC32IEEE        200000              8659 ns/op               0 B/op          0 allocs/op
 
 ## License
 
