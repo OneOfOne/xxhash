@@ -12,13 +12,13 @@ github.com/OneOfOne/xxhash
 
 ## Benchmark
 
-```sh
+```
 go test github.com/OneOfOne/xxhash -bench=. -benchmem
 ```
 
 Core i5-750 @ 2.67GHz, Linux 3.15.6 (64bit)
 
-```sh
+```
 BenchmarkXxhash64        3000000               472 ns/op               0 B/op          0 allocs/op
 BenchmarkXxhash32        2000000               725 ns/op               0 B/op          0 allocs/op
 BenchmarkFnv32           1000000              2004 ns/op            2816 B/op          1 allocs/op
