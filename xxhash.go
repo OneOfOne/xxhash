@@ -50,7 +50,7 @@ package xxhash
 /*
 //pull in xhash.c to compile it staticly
 #cgo CFLAGS: -std=c99
-#include "C/xxhash.c"
+#include "c-trunk/xxhash.c"
 */
 import "C"
 import "fmt"

@@ -1,7 +1,7 @@
 package xxhash
 
 /*
-#include "C/xxhash.h"
+#include "c-trunk/xxhash.h"
 */
 import "C"
 
