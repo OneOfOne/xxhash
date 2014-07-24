@@ -1,0 +1,3 @@
+[submodule "C"]
+	path = C
+	url = ./C
