@@ -4,11 +4,11 @@ xxHash is an extremely fast non-cryptographic Hash algorithm, working at speeds 
 
 Supports both the 32bit and 64bit versions of the the algorithm.
 
+[![Build Status](https://travis-ci.org/OneOfOne/xxhash.svg?branch=master)](https://travis-ci.org/OneOfOne/xxhash)
+
 ## Install
 
-```sh
-github.com/OneOfOne/xxhash
-```
+	go get github.com/OneOfOne/xxhash
 
 ## Benchmark
 
@@ -47,7 +47,7 @@ package xxhash
 
 /*
 //pull in xhash.c to compile it staticly
-#cgo CFLAGS: -std=c99
+#cgo CFLAGS: -std=c99 -O2
 #include "c-trunk/xxhash.c"
 */
 import "C"

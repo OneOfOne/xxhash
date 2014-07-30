@@ -8,9 +8,12 @@ non-cryptographic Hash algorithm, working at speeds close to RAM limits.
 
 Supports both the 32bit and 64bit versions of the the algorithm.
 
+
+[![Build Status](https://travis-ci.org/OneOfOne/xxhash.svg?branch=master)](https://travis-ci.org/OneOfOne/xxhash)
+
 ## Install
 
-```sh github.com/OneOfOne/xxhash ```
+    go get github.com/OneOfOne/xxhash
 
 ## Benchmark
 
