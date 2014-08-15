@@ -1,10 +1,13 @@
-package xxhash
+package xxhash_test
 
 import (
 	"hash/adler32"
 	"hash/crc32"
 	"hash/fnv"
 	"testing"
+
+	C "github.com/OneOfOne/xxhash"
+	N "github.com/OneOfOne/xxhash/native"
 )
 
 var (
@@ -21,8 +24,13 @@ const (
 	expected64 uint64 = 0xFFAE31BEBFED7652
 )
 
+func Test(t *testing.T) {
+	t.Logf("CGO version's backend: %s", C.Backend)
+	t.Logf("Native version's backend: %s", N.Backend)
+}
+
 func TestHash32(t *testing.T) {
-	h := New32()
+	h := N.New32()
 	h.Write(in)
 	r := h.Sum32()
 	if r != expected32 {
@@ -30,8 +38,31 @@ func TestHash32(t *testing.T) {
 	}
 }
 
+func TestHash32Cgo(t *testing.T) {
+	h := C.New32()
+	h.Write(in)
+	r := h.Sum32()
+	if r != expected32 {
+		t.Errorf("expected 0x%x, got 0x%x.", expected32, r)
+	}
+}
+
+func TestHash32Short(t *testing.T) {
+	r := N.Checksum32(in)
+	if r != expected32 {
+		t.Errorf("expected 0x%x, got 0x%x.", expected32, r)
+	}
+}
+
+func TestHash32CgoShort(t *testing.T) {
+	r := C.Checksum32(in)
+	if r != expected32 {
+		t.Errorf("expected 0x%x, got 0x%x.", expected32, r)
+	}
+}
+
 func TestHash64(t *testing.T) {
-	h := New64()
+	h := N.New64()
 	h.Write(in)
 	r := h.Sum64()
 	if r != expected64 {
@@ -39,15 +70,50 @@ func TestHash64(t *testing.T) {
 	}
 }
 
-func BenchmarkXxhash64(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		Checksum64(in)
+func TestHash64Cgo(t *testing.T) {
+	h := C.New64()
+	h.Write(in)
+	r := h.Sum64()
+	if r != expected64 {
+		t.Errorf("expected 0x%x, got 0x%x.", expected64, r)
+	}
+}
+
+func TestHash64Short(t *testing.T) {
+	r := N.Checksum64(in)
+	if r != expected64 {
+		t.Errorf("expected 0x%x, got 0x%x.", expected64, r)
+	}
+}
+
+func TestHash64CgoShort(t *testing.T) {
+	r := C.Checksum64(in)
+	if r != expected64 {
+		t.Errorf("expected 0x%x, got 0x%x.", expected64, r)
 	}
 }
 
 func BenchmarkXxhash32(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		Checksum32(in)
+		N.Checksum32(in)
+	}
+}
+
+func BenchmarkXxhash32Cgo(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		C.Checksum32(in)
+	}
+}
+
+func BenchmarkXxhash64(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		N.Checksum64(in)
+	}
+}
+
+func BenchmarkXxhash64Cgo(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		C.Checksum64(in)
 	}
 }
 
@@ -75,4 +141,34 @@ func BenchmarkCRC32IEEE(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		crc32.ChecksumIEEE(in)
 	}
+}
+
+func BenchmarkXxhash64VeryShort(b *testing.B) {
+	k := []byte("Test-key-1")
+	for i := 0; i < b.N; i++ {
+		N.Checksum64(k)
+	}
+}
+
+func BenchmarkXxhash64CgoVeryShort(b *testing.B) {
+	k := []byte("Test-key-100")
+	for i := 0; i < b.N; i++ {
+		C.Checksum64(k)
+	}
+}
+
+func BenchmarkXxhash64MultiWrites(b *testing.B) {
+	h := N.New64()
+	for i := 0; i < b.N; i++ {
+		h.Write(in)
+	}
+	_ = h.Sum64()
+}
+
+func BenchmarkXxhash64CgoMultiWrites(b *testing.B) {
+	h := C.New64()
+	for i := 0; i < b.N; i++ {
+		h.Write(in)
+	}
+	_ = h.Sum64()
 }
