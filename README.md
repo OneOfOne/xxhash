@@ -52,6 +52,19 @@ Core i5-750 @ 2.67GHz, Linux 3.16 (64bit)
 	BenchmarkXxhash64MultiWrites           1000000              1314 ns/op               0 B/op          0 allocs/op
 	BenchmarkXxhash64CgoMultiWrites        3000000               492 ns/op               0 B/op          0 allocs/op
 
+## Simple usage
+	h := xxhash.New64()
+	// r, err := os.Open("......")
+	// defer f.Close()
+	r := strings.NewReader(F)
+	io.Copy(h, r)
+	fmt.Println("xxhash.Backend:", xxhash.Backend)
+	fmt.Println("File checksum:", h.Sum64())
+
+[<kbd>playground</kbd>](http://play.golang.org/p/rhRN3RdQyd)
+
+## Documentation
+http://godoc.org/github.com/OneOfOne/xxhash
 
 ## License
 
@@ -70,17 +83,3 @@ Copyright 2014 [OneOfOne](https://github.com/OneOfOne/)
 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 	See the License for the specific language governing permissions and
 	limitations under the License.
-
-## Simple usage
-	h := xxhash.New64()
-	// r, err := os.Open("......")
-	// defer f.Close()
-	r := strings.NewReader(F)
-	io.Copy(h, r)
-	fmt.Println("xxhash.Backend:", xxhash.Backend)
-	fmt.Println("File checksum:", h.Sum64())
-
-[<kbd>playground</kbd>](http://play.golang.org/p/rhRN3RdQyd)
-
-## Documentation
-http://godoc.org/github.com/OneOfOne/xxhash
