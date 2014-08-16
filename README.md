@@ -43,7 +43,8 @@ Core i5-750 @ 2.67GHz, Linux 3.16 (64bit)
 	BenchmarkAdler32                        500000              2644 ns/op               0 B/op          0 allocs/op
 	BenchmarkCRC32IEEE                      200000              8646 ns/op               0 B/op          0 allocs/op
 
-	# VeryShort uses xxhash.Checksum64([]byte("Test-key-100")), the native version is much faster than the CGO version
+	# VeryShort uses xxhash.Checksum64([]byte("Test-key-100")),
+	# the native version is much faster than the CGO version.
 	# due to less context changes
 	BenchmarkXxhash64VeryShort            50000000              24.5 ns/op               0 B/op          0 allocs/op
 	BenchmarkXxhash64CgoVeryShort         10000000               182 ns/op               0 B/op          0 allocs/op

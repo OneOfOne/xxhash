@@ -6,8 +6,8 @@ It successfully passes the [SMHasher](http://code.google.com/p/smhasher/wiki/SMH
 
 |Branch      |Status   |
 |------------|---------|
-|master      | [![Build Status](https://travis-ci.org/Cyan4973/lz4.svg?branch=master)](https://travis-ci.org/Cyan4973/xxhash) |
-|dev         | [![Build Status](https://travis-ci.org/Cyan4973/lz4.svg?branch=dev)](https://travis-ci.org/Cyan4973/xxhash) |
+|master      | [![Build Status](https://travis-ci.org/Cyan4973/xxHash.svg?branch=master)](https://travis-ci.org/Cyan4973/xxHash?branch=master) |
+|dev         | [![Build Status](https://travis-ci.org/Cyan4973/xxHash.svg?branch=dev)](https://travis-ci.org/Cyan4973/xxHash?branch=dev) |
 
 
 Benchmarks
@@ -69,7 +69,6 @@ The reference system uses a Core i5-3340M @2.7GHz
 
 
 This is an official mirror of xxHash project, [hosted on Google Code](http://code.google.com/p/xxhash/).
-The intention is to offer github's capabilities to xxHash users, such as cloning, branch, or source download.
+The intention is to offer github's capabilities to xxhash users, such as cloning, branch, pull requests or source download.
 
-The "master" branch will reflect, the status of xxHash at its official homepage. Other branches will also exist, typically to fix some open issues or new requirements, and be available for testing before merge into master.
-
+The "master" branch will reflect, the status of xxhash at its official homepage. The "dev" branch is the one where all contributions will be merged. If you plan to propose a patch, please commit into the "dev" branch. Direct commit to "master" are not permitted. Feature branches will also exist, typically to introduce new requirements, and be temporarily available for testing before merge into "dev" branch.
