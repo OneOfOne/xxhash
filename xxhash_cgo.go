@@ -10,6 +10,7 @@ import "C"
 
 import (
 	"hash"
+	"runtime"
 	"unsafe"
 )
 
@@ -18,7 +19,6 @@ const Backend = "CGO"
 
 type xxHash32 struct {
 	seed  uint32
-	sum   uint32
 	state unsafe.Pointer
 }
 
@@ -32,7 +32,7 @@ func (xx *xxHash32) Size() int {
 // of data, but it may operate more efficiently if all writes
 // are a multiple of the block size.
 func (xx *xxHash32) BlockSize() int {
-	return 8
+	return 16
 }
 
 // Sum appends the current hash to b and returns the resulting slice.
@@ -54,12 +54,7 @@ func (xx *xxHash32) Write(p []byte) (n int, err error) {
 }
 
 func (xx *xxHash32) Sum32() uint32 {
-	if xx.state == nil {
-		return xx.sum
-	}
-	xx.sum = uint32(C.XXH32_digest(xx.state))
-	xx.state = nil
-	return xx.sum
+	return uint32(C.XXH32_intermediateDigest(xx.state))
 }
 
 // Reset resets the Hash to its initial state.
@@ -76,6 +71,9 @@ func NewS32(seed uint32) hash.Hash32 {
 		seed: seed,
 	}
 	h.Reset()
+	runtime.SetFinalizer(h, func(h *xxHash32) {
+		C.XXH32_digest(h.state)
+	})
 	return h
 }
 
@@ -110,7 +108,7 @@ func (xx *xxHash64) Size() int {
 // of data, but it may operate more efficiently if all writes
 // are a multiple of the block size.
 func (xx *xxHash64) BlockSize() int {
-	return 8
+	return 32
 }
 
 // Sum appends the current hash to b and returns the resulting slice.
@@ -132,12 +130,7 @@ func (xx *xxHash64) Write(p []byte) (n int, err error) {
 }
 
 func (xx *xxHash64) Sum64() uint64 {
-	if xx.state == nil {
-		return xx.sum
-	}
-	xx.sum = uint64(C.XXH64_digest(xx.state))
-	xx.state = nil
-	return xx.sum
+	return uint64(C.XXH64_intermediateDigest(xx.state))
 }
 
 // Reset resets the Hash to its initial state.
@@ -154,6 +147,10 @@ func NewS64(seed uint64) hash.Hash64 {
 		seed: seed,
 	}
 	h.Reset()
+	runtime.SetFinalizer(h, func(h *xxHash64) {
+		C.XXH64_digest(h.state)
+	})
+
 	return h
 }
 
