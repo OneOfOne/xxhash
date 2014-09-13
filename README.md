@@ -1,11 +1,9 @@
-# xxhash
+# xxhash [![GoDoc](http://godoc.org/github.com/OneOfOne/xxhash?status.svg)](http://godoc.org/github.com/OneOfOne/xxhash) [![Build Status](https://travis-ci.org/OneOfOne/xxhash.svg?branch=master)](https://travis-ci.org/OneOfOne/xxhash)
 --
+
 [xxhash](https://code.google.com/p/xxhash/) ([Copyright](https://code.google.com/p/xxhash/source/browse/trunk/LICENSE) (c) 2012-2014, Yann Collet) is an extremely fast non-cryptographic Hash algorithm, working at speeds close to RAM limits.
 
 Supports both the 32bit and 64bit versions of the the algorithm.
-
-
-[![Build Status](https://travis-ci.org/OneOfOne/xxhash.svg?branch=master)](https://travis-ci.org/OneOfOne/xxhash)
 
 ## Install
 
@@ -53,7 +51,7 @@ Core i5-750 @ 2.67GHz, Linux 3.16 (64bit)
 	BenchmarkXxhash64MultiWrites           1000000              1314 ns/op               0 B/op          0 allocs/op
 	BenchmarkXxhash64CgoMultiWrites        3000000               492 ns/op               0 B/op          0 allocs/op
 
-## Simple usage
+## Usage
 	h := xxhash.New64()
 	// r, err := os.Open("......")
 	// defer f.Close()
@@ -63,9 +61,6 @@ Core i5-750 @ 2.67GHz, Linux 3.16 (64bit)
 	fmt.Println("File checksum:", h.Sum64())
 
 [<kbd>playground</kbd>](http://play.golang.org/p/rhRN3RdQyd)
-
-## Documentation
-http://godoc.org/github.com/OneOfOne/xxhash
 
 ## License
 
