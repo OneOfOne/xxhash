@@ -17,8 +17,9 @@ Or to install the CGO wrapper over the original C code (only recommended if hash
 
 ## Features
 
-* The native version is optimized and almost as fast as you can get in pure Go.
+* The native version is optimized and is as you can get in pure Go.
 * The native version falls back to a less optimized version on appengine (it uses unsafe).
+* The native version (on non-appengine builds) by default **ignores endianness**, if you require endianness safety (aka same hash on big and little endian systems), build with `-tags be`.
 * Both the native version and the cgo version supports 64bit and 32bit versions of the algorithm.
 * When using the cgo version, it will automaticly fallback to the native version if cgo isn't available.
 
@@ -26,30 +27,26 @@ Or to install the CGO wrapper over the original C code (only recommended if hash
 
 	go test github.com/OneOfOne/xxhash -bench=. -benchmem
 
+### Core i7-4790 @ 3.60GHz, Linux 3.16.2 (64bit)
 
-Core i5-750 @ 2.67GHz, Linux 3.16 (64bit)
+	BenchmarkXxhash32                1000000              1029 ns/op               0 B/op          0 allocs/op
+	BenchmarkXxhash32Cgo             3000000               456 ns/op               0 B/op          0 allocs/op
 
+	BenchmarkXxhash64                2000000               727 ns/op               0 B/op          0 allocs/op
+	BenchmarkXxhash64Cgo             5000000               328 ns/op               0 B/op          0 allocs/op
 
-	BenchmarkXxhash32                      1000000              1937 ns/op               0 B/op          0 allocs/op
-	BenchmarkXxhash32Cgo                   2000000               721 ns/op               0 B/op          0 allocs/op
+	BenchmarkFnv32                   300000               4930 ns/op            2816 B/op          1 allocs/op
+	BenchmarkFnv64                   300000               4994 ns/op            2816 B/op          1 allocs/op
+	BenchmarkAdler32                 1000000              1238 ns/op               0 B/op          0 allocs/op
+	BenchmarkCRC32IEEE               300000               5087 ns/op               0 B/op          0 allocs/op
 
-	BenchmarkXxhash64                      1000000              1041 ns/op               0 B/op          0 allocs/op
-	BenchmarkXxhash64Cgo                   3000000               473 ns/op               0 B/op          0 allocs/op
-
-	BenchmarkFnv32                          200000             11427 ns/op            2816 B/op          1 allocs/op
-	BenchmarkFnv64                          200000             11201 ns/op            2816 B/op          1 allocs/op
-	BenchmarkAdler32                        500000              2644 ns/op               0 B/op          0 allocs/op
-	BenchmarkCRC32IEEE                      200000              8646 ns/op               0 B/op          0 allocs/op
-
-	# VeryShort uses xxhash.Checksum64([]byte("Test-key-100")),
-	# the native version is much faster than the CGO version.
-	# due to less context changes
-	BenchmarkXxhash64VeryShort            50000000              24.5 ns/op               0 B/op          0 allocs/op
-	BenchmarkXxhash64CgoVeryShort         10000000               182 ns/op               0 B/op          0 allocs/op
+	# key = []byte("Test-key-100")
+	BenchmarkXxhash64VeryShort       100000000            16.8 ns/op             0 B/op          0 allocs/op
+	BenchmarkXxhash64CgoVeryShort    10000000              174 ns/op               0 B/op          0 allocs/op
 
 	# MultiWrites uses h.Write multiple times
-	BenchmarkXxhash64MultiWrites           1000000              1314 ns/op               0 B/op          0 allocs/op
-	BenchmarkXxhash64CgoMultiWrites        3000000               492 ns/op               0 B/op          0 allocs/op
+	BenchmarkXxhash64MultiWrites     2000000               815 ns/op               0 B/op          0 allocs/op
+	BenchmarkXxhash64CgoMultiWrites  5000000               342 ns/op               0 B/op          0 allocs/op
 
 ## Usage
 	h := xxhash.New64()
