@@ -144,7 +144,7 @@ func BenchmarkCRC32IEEE(b *testing.B) {
 }
 
 func BenchmarkXxhash64VeryShort(b *testing.B) {
-	k := []byte("Test-key-1")
+	k := []byte("Test-key-100")
 	for i := 0; i < b.N; i++ {
 		N.Checksum64(k)
 	}
