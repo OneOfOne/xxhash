@@ -7,20 +7,32 @@ import "unsafe"
 // Backend returns the current version of xxhash being used.
 const Backend = "GoUnsafe"
 
-func readU32le(b []byte, i int) (u uint32) {
-	u = *(*uint32)(unsafe.Pointer(&b[i]))
+type byteReader struct {
+	p unsafe.Pointer
+}
+
+func newbyteReader(b *[]byte) *byteReader {
+	return &byteReader{unsafe.Pointer(&(*b)[0])}
+}
+
+func (br *byteReader) Uint32(i int) (u uint32) {
+	u = *(*uint32)(unsafe.Pointer(uintptr(br.p) + uintptr(i)))
 	if isBig {
 		u = swap32be(u)
 	}
 	return
 }
 
-func readU64le(b []byte, i int) (u uint64) {
-	u = *(*uint64)(unsafe.Pointer(&b[i]))
+func (br *byteReader) Uint64(i int) (u uint64) {
+	u = *(*uint64)(unsafe.Pointer(uintptr(br.p) + uintptr(i)))
 	if isBig {
 		u = swap64be(u)
 	}
 	return
+}
+
+func (br *byteReader) Byte(i int) byte {
+	return *(*byte)(unsafe.Pointer(uintptr(br.p) + uintptr(i)))
 }
 
 func swap32be(x uint32) uint32 {

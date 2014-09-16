@@ -5,13 +5,23 @@ package xxhash
 // Backend returns the current version of xxhash being used.
 const Backend = "Go"
 
-func readU32le(b []byte, i int) uint32 {
-	b = b[i:]
-	return uint32(b[0]) | uint32(b[1])<<8 | uint32(b[2])<<16 | uint32(b[3])<<24
+type byteReader struct {
+	p []byte
 }
 
-func readU64le(b []byte, i int) uint64 {
-	b = b[i:]
-	return uint64(b[0]) | uint64(b[1])<<8 | uint64(b[2])<<16 | uint64(b[3])<<24 |
-		uint64(b[4])<<32 | uint64(b[5])<<40 | uint64(b[6])<<48 | uint64(b[7])<<56
+func newbyteReader(in *[]byte) *byteReader {
+	return &byteReader{*in}
+}
+
+func (br *byteReader) Uint32(i int) (u uint32) {
+	return uint32(br.p[i]) | uint32(br.p[i+1])<<8 | uint32(br.p[i+2])<<16 | uint32(br.p[i+3])<<24
+}
+
+func (br *byteReader) Uint64(i int) (u uint64) {
+	return uint64(br.p[i]) | uint64(br.p[i+1])<<8 | uint64(br.p[i+2])<<16 | uint64(br.p[i+3])<<24 |
+		uint64(br.p[i+4])<<32 | uint64(br.p[i+5])<<40 | uint64(br.p[i+6])<<48 | uint64(br.p[i+7])<<56
+}
+
+func (br *byteReader) Byte(i int) byte {
+	return br.p[i]
 }

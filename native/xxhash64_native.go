@@ -17,7 +17,7 @@ func rotl64(x, r uint64) uint64 {
 // Checksum64S returns the 64bit xxhash checksum for a single input
 func Checksum64S(in []byte, seed uint64) (h uint64) {
 	i, l := 0, len(in)
-
+	br := newbyteReader(&in)
 	if l >= 32 {
 		var (
 			v1 = seed + prime64x1 + prime64x2
@@ -26,16 +26,16 @@ func Checksum64S(in []byte, seed uint64) (h uint64) {
 			v4 = seed - prime64x1
 		)
 		for ; i < l-32; i += 32 {
-			v1 += readU64le(in, i) * prime64x2
+			v1 += br.Uint64(i) * prime64x2
 			v1 = rotl64(v1, 31) * prime64x1
 
-			v2 += readU64le(in, i+8) * prime64x2
+			v2 += br.Uint64(i+8) * prime64x2
 			v2 = rotl64(v2, 31) * prime64x1
 
-			v3 += readU64le(in, i+16) * prime64x2
+			v3 += br.Uint64(i+16) * prime64x2
 			v3 = rotl64(v3, 31) * prime64x1
 
-			v4 += readU64le(in, i+24) * prime64x2
+			v4 += br.Uint64(i+24) * prime64x2
 			v4 = rotl64(v4, 31) * prime64x1
 		}
 
@@ -70,7 +70,7 @@ func Checksum64S(in []byte, seed uint64) (h uint64) {
 	h += uint64(l)
 
 	for ; i < l-8; i += 8 {
-		k := readU64le(in, i)
+		k := br.Uint64(i)
 		k *= prime64x2
 		k = rotl64(k, 31)
 		k *= prime64x1
@@ -79,12 +79,12 @@ func Checksum64S(in []byte, seed uint64) (h uint64) {
 	}
 
 	for ; i < l-4; i += 4 {
-		h ^= uint64(readU32le(in, i)) * prime64x1
+		h ^= uint64(br.Uint32(i)) * prime64x1
 		h = rotl64(h, 23)*prime64x2 + prime64x3
 	}
 
 	for ; i < l; i++ {
-		h ^= uint64(in[i]) * prime64x5
+		h ^= uint64(br.Byte(i)) * prime64x5
 		h = rotl64(h, 11) * prime64x1
 	}
 
@@ -148,7 +148,6 @@ func (xx *xxHash64) Reset() {
 func (xx *xxHash64) Write(in []byte) (n int, err error) {
 	i, l, ml := 0, len(in), len(xx.mem)
 	xx.ln += uint64(l)
-
 	if ml+l < 32 {
 		xx.mem = append(xx.mem, in...)
 		return l, nil
@@ -157,41 +156,42 @@ func (xx *xxHash64) Write(in []byte) (n int, err error) {
 	if ml > 0 {
 		i += 32 - ml
 		xx.mem = append(xx.mem, in[:i]...)
+		br := newbyteReader(&xx.mem)
 
-		xx.v1 += readU64le(xx.mem, 0) * prime64x2
+		xx.v1 += br.Uint64(0) * prime64x2
 		xx.v1 = rotl64(xx.v1, 31)
 		xx.v1 *= prime64x1
 
-		xx.v2 += readU64le(xx.mem, 8) * prime64x2
+		xx.v2 += br.Uint64(8) * prime64x2
 		xx.v2 = rotl64(xx.v2, 31)
 		xx.v2 *= prime64x1
 
-		xx.v3 += readU64le(xx.mem, 16) * prime64x2
+		xx.v3 += br.Uint64(16) * prime64x2
 		xx.v3 = rotl64(xx.v3, 31)
 		xx.v3 *= prime64x1
 
-		xx.v4 += readU64le(xx.mem, 24) * prime64x2
+		xx.v4 += br.Uint64(24) * prime64x2
 		xx.v4 = rotl64(xx.v4, 31)
 		xx.v4 *= prime64x1
 
 		xx.mem = xx.mem[:0]
 	}
-
+	br := newbyteReader(&in)
 	if l >= 32 {
 		for ; i < l-32; i += 32 {
-			xx.v1 += readU64le(in, i) * prime64x2
+			xx.v1 += br.Uint64(i) * prime64x2
 			xx.v1 = rotl64(xx.v1, 31)
 			xx.v1 *= prime64x1
 
-			xx.v2 += readU64le(in, i+8) * prime64x2
+			xx.v2 += br.Uint64(i+8) * prime64x2
 			xx.v2 = rotl64(xx.v2, 31)
 			xx.v2 *= prime64x1
 
-			xx.v3 += readU64le(in, i+16) * prime64x2
+			xx.v3 += br.Uint64(i+16) * prime64x2
 			xx.v3 = rotl64(xx.v3, 31)
 			xx.v3 *= prime64x1
 
-			xx.v4 += readU64le(in, i+24) * prime64x2
+			xx.v4 += br.Uint64(i+24) * prime64x2
 			xx.v4 = rotl64(xx.v4, 31)
 			xx.v4 *= prime64x1
 		}
@@ -247,8 +247,9 @@ func (xx *xxHash64) Sum64() (h uint64) {
 	}
 
 	h += xx.ln
+	br := newbyteReader(&xx.mem)
 	for ; i < l-8; i += 8 {
-		k := readU64le(xx.mem, i)
+		k := br.Uint64(i)
 		k *= prime64x2
 		k = rotl64(k, 31)
 		k *= prime64x1
@@ -257,12 +258,12 @@ func (xx *xxHash64) Sum64() (h uint64) {
 	}
 
 	for ; i < l-4; i += 4 {
-		h ^= uint64(readU32le(xx.mem, i)) * prime64x1
+		h ^= uint64(br.Uint32(i)) * prime64x1
 		h = rotl64(h, 23)*prime64x2 + prime64x3
 	}
 
 	for ; i < l; i++ {
-		h ^= uint64(xx.mem[i]) * prime64x5
+		h ^= uint64(br.Byte(i)) * prime64x5
 		h = rotl64(h, 11) * prime64x1
 	}
 
