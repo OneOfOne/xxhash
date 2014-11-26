@@ -10,5 +10,5 @@ var (
 )
 
 const (
-	oneGb = 2 << 30
+	oneGb = 1 << 30
 )
