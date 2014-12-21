@@ -110,7 +110,7 @@ type xxHash64 struct {
 
 // Size returns the number of bytes Sum will return.
 func (xx *xxHash64) Size() int {
-	return 4
+	return 8
 }
 
 // BlockSize returns the hash's underlying block size.
