@@ -17,7 +17,7 @@ func rotl64(x, r uint64) uint64 {
 // Checksum64S returns the 64bit xxhash checksum for a single input
 func Checksum64S(in []byte, seed uint64) (h uint64) {
 	i, l := 0, len(in)
-	br := newbyteReader(&in)
+	br := newbyteReader(in)
 	if l >= 32 {
 		var (
 			v1 = seed + prime64x1 + prime64x2
@@ -156,7 +156,7 @@ func (xx *xxHash64) Write(in []byte) (n int, err error) {
 	if ml > 0 {
 		i += 32 - ml
 		xx.mem = append(xx.mem, in[:i]...)
-		br := newbyteReader(&xx.mem)
+		br := newbyteReader(xx.mem)
 
 		xx.v1 += br.Uint64(0) * prime64x2
 		xx.v1 = rotl64(xx.v1, 31)
@@ -176,7 +176,7 @@ func (xx *xxHash64) Write(in []byte) (n int, err error) {
 
 		xx.mem = xx.mem[:0]
 	}
-	br := newbyteReader(&in)
+	br := newbyteReader(in)
 	if l >= 32 {
 		for ; i < l-32; i += 32 {
 			xx.v1 += br.Uint64(i) * prime64x2
@@ -247,26 +247,27 @@ func (xx *xxHash64) Sum64() (h uint64) {
 	}
 
 	h += xx.ln
-	br := newbyteReader(&xx.mem)
-	for ; i < l-8; i += 8 {
-		k := br.Uint64(i)
-		k *= prime64x2
-		k = rotl64(k, 31)
-		k *= prime64x1
-		h ^= k
-		h = rotl64(h, 27)*prime64x1 + prime64x4
-	}
+	if len(xx.mem) > 0 {
+		br := newbyteReader(xx.mem)
+		for ; i < l-8; i += 8 {
+			k := br.Uint64(i)
+			k *= prime64x2
+			k = rotl64(k, 31)
+			k *= prime64x1
+			h ^= k
+			h = rotl64(h, 27)*prime64x1 + prime64x4
+		}
 
-	for ; i < l-4; i += 4 {
-		h ^= uint64(br.Uint32(i)) * prime64x1
-		h = rotl64(h, 23)*prime64x2 + prime64x3
-	}
+		for ; i < l-4; i += 4 {
+			h ^= uint64(br.Uint32(i)) * prime64x1
+			h = rotl64(h, 23)*prime64x2 + prime64x3
+		}
 
-	for ; i < l; i++ {
-		h ^= uint64(br.Byte(i)) * prime64x5
-		h = rotl64(h, 11) * prime64x1
+		for ; i < l; i++ {
+			h ^= uint64(br.Byte(i)) * prime64x5
+			h = rotl64(h, 11) * prime64x1
+		}
 	}
-
 	h ^= h >> 33
 	h *= prime64x2
 	h ^= h >> 29

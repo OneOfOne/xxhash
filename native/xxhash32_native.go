@@ -17,7 +17,7 @@ func rotl32(x, r uint32) uint32 {
 // Checksum32S returns the checksum of the input bytes with the specific seed.
 func Checksum32S(in []byte, seed uint32) (h uint32) {
 	i, l := 0, len(in)
-	br := newbyteReader(&in)
+	br := newbyteReader(in)
 	if l >= 16 {
 		var (
 			v1 = seed + prime32x1 + prime32x2
@@ -128,7 +128,7 @@ func (xx *xxHash32) Write(in []byte) (n int, err error) {
 
 	if ml > 0 {
 		i += 16 - ml
-		br := newbyteReader(&xx.mem)
+		br := newbyteReader(xx.mem)
 		xx.mem = append(xx.mem, in[:i]...)
 
 		xx.v1 += br.Uint32(i) * prime32x2
@@ -149,7 +149,7 @@ func (xx *xxHash32) Write(in []byte) (n int, err error) {
 
 		xx.mem = xx.mem[:0]
 	}
-	br := newbyteReader(&in)
+	br := newbyteReader(in)
 	if l >= 16 {
 		for ; i < l-16; i += 16 {
 			xx.v1 += br.Uint32(i) * prime32x2
@@ -196,17 +196,18 @@ func (xx *xxHash32) Sum32() (h uint32) {
 
 	h += uint32(xx.ln)
 
-	br := newbyteReader(&xx.mem)
-	for ; i < l-4; i += 4 {
-		h += br.Uint32(i) * prime32x3
-		h = rotl32(h, 17) * prime32x4
-	}
+	if len(xx.mem) > 0 {
+		br := newbyteReader(xx.mem)
+		for ; i < l-4; i += 4 {
+			h += br.Uint32(i) * prime32x3
+			h = rotl32(h, 17) * prime32x4
+		}
 
-	for ; i < l; i++ {
-		h += uint32(br.Byte(i)) * prime32x5
-		h = rotl32(h, 11) * prime32x1
+		for ; i < l; i++ {
+			h += uint32(br.Byte(i)) * prime32x5
+			h = rotl32(h, 11) * prime32x1
+		}
 	}
-
 	h ^= h >> 15
 	h *= prime32x2
 	h ^= h >> 13

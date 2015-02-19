@@ -12,8 +12,8 @@ type byteReader struct {
 	p unsafe.Pointer
 }
 
-func newbyteReader(b *[]byte) *byteReader {
-	return &byteReader{unsafe.Pointer(&(*b)[0])}
+func newbyteReader(b []byte) *byteReader {
+	return &byteReader{unsafe.Pointer(&b[0])}
 }
 
 func (br *byteReader) Uint32(i int) (u uint32) {
