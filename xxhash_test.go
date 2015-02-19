@@ -120,14 +120,16 @@ func BenchmarkXxhash64Cgo(b *testing.B) {
 func BenchmarkFnv32(b *testing.B) {
 	h := fnv.New32()
 	for i := 0; i < b.N; i++ {
-		h.Sum(in)
+		h.Write(in)
+		h.Sum(nil)
 	}
 }
 
 func BenchmarkFnv64(b *testing.B) {
 	h := fnv.New64()
 	for i := 0; i < b.N; i++ {
-		h.Sum(in)
+		h.Write(in)
+		h.Sum(nil)
 	}
 }
 
@@ -150,6 +152,15 @@ func BenchmarkXxhash64VeryShort(b *testing.B) {
 	}
 }
 
+func BenchmarkFnv64VeryShort(b *testing.B) {
+	k := []byte("Test-key-100")
+	for i := 0; i < b.N; i++ {
+		h := fnv.New64()
+		h.Write(k)
+		h.Sum(nil)
+	}
+}
+
 func BenchmarkXxhash64CgoVeryShort(b *testing.B) {
 	k := []byte("Test-key-100")
 	for i := 0; i < b.N; i++ {
@@ -159,6 +170,14 @@ func BenchmarkXxhash64CgoVeryShort(b *testing.B) {
 
 func BenchmarkXxhash64MultiWrites(b *testing.B) {
 	h := N.New64()
+	for i := 0; i < b.N; i++ {
+		h.Write(in)
+	}
+	_ = h.Sum64()
+}
+
+func BenchmarkFnv64MultiWrites(b *testing.B) {
+	h := fnv.New64()
 	for i := 0; i < b.N; i++ {
 		h.Write(in)
 	}
