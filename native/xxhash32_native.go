@@ -121,7 +121,11 @@ func (xx *xxHash32) Write(in []byte) (n int, err error) {
 	i, l, ml := 0, len(in), len(xx.mem)
 	xx.ln += uint64(l)
 
-	if ml+l < 16 {
+	if d := 16 - ml; ml > 0 && ml+l > 16 {
+		xx.mem = append(xx.mem, in[:d]...)
+		in = in[d:]
+		ml, l = 16, len(in)
+	} else if ml+l <= 16 {
 		xx.mem = append(xx.mem, in...)
 		return l, nil
 	}

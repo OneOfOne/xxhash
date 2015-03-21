@@ -148,7 +148,11 @@ func (xx *xxHash64) Reset() {
 func (xx *xxHash64) Write(in []byte) (n int, err error) {
 	i, l, ml := 0, len(in), len(xx.mem)
 	xx.ln += uint64(l)
-	if ml+l < 32 {
+	if d := 32 - ml; ml > 0 && ml+l > 32 {
+		xx.mem = append(xx.mem, in[:d]...)
+		in = in[d:]
+		ml, l = 32, len(in)
+	} else if ml+l <= 32 {
 		xx.mem = append(xx.mem, in...)
 		return l, nil
 	}
@@ -209,7 +213,6 @@ func (xx *xxHash64) Write(in []byte) (n int, err error) {
 	if cap(xx.mem) > 32 {
 		panic("cap(xx.mem) > 32")
 	}
-
 	return l, nil
 }
 
