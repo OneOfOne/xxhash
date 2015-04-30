@@ -27,6 +27,29 @@ Or to install the CGO wrapper over the original C code (only recommended if hash
 
 	go test github.com/OneOfOne/xxhash -bench=. -benchmem
 
+### Core i7-4790 @ 3.60GHz, Linux 4.0 (64bit), Go 1.5 (+433af05 2015-04-30)
+
+	BenchmarkXxhash32                2000000              1060 ns/op               0 B/op          0 allocs/op
+	BenchmarkXxhash32Cgo             3000000               492 ns/op               0 B/op          0 allocs/op
+
+	BenchmarkXxhash64                2000000               762 ns/op               0 B/op          0 allocs/op
+	BenchmarkXxhash64Cgo             5000000               359 ns/op               0 B/op          0 allocs/op
+
+	BenchmarkFnv32                    500000              2400 ns/op              16 B/op          1 allocs/op
+	BenchmarkFnv64                    500000              2427 ns/op              16 B/op          1 allocs/op
+	BenchmarkAdler32                 1000000              1223 ns/op               0 B/op          0 allocs/op
+	BenchmarkCRC32IEEE                300000              5354 ns/op               0 B/op          0 allocs/op
+
+	BenchmarkXxhash64VeryShort     100000000              18.6 ns/op               0 B/op          0 allocs/op
+	BenchmarkXxhash64CgoVeryShort   10000000               168 ns/op               0 B/op          0 allocs/op
+
+	BenchmarkFnv64VeryShort         20000000              98.4 ns/op              32 B/op          2 allocs/op
+
+	BenchmarkXxhash64MultiWrites     2000000               724 ns/op               0 B/op          0 allocs/op
+	BenchmarkXxhash64CgoMultiWrites  5000000               331 ns/op               0 B/op          0 allocs/op
+
+	BenchmarkFnv64MultiWrites        1000000              2357 ns/op               0 B/op          0 allocs/op
+
 ### Core i7-4790 @ 3.60GHz, Linux 3.16.2 (64bit)
 
 	BenchmarkXxhash32                1000000              1029 ns/op               0 B/op          0 allocs/op

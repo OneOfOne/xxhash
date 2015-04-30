@@ -121,7 +121,7 @@ func (xx *xxHash64) BlockSize() int {
 	return 32
 }
 
-// NewS64 creates a new hash.Hash32 computing the 64bit xxHash checksum starting with the specific seed.
+// NewS64 creates a new hash.Hash64 computing the 64bit xxHash checksum starting with the specific seed.
 func NewS64(seed uint64) (xx hash.Hash64) {
 	xx = &xxHash64{
 		seed: seed,
@@ -131,7 +131,7 @@ func NewS64(seed uint64) (xx hash.Hash64) {
 	return
 }
 
-// New64 creates a new hash.Hash64 computing the 32bit xxHash checksum starting with the seed set to 0x0.
+// New64 creates a new hash.Hash64 computing the 64bit xxHash checksum starting with the seed set to 0x0.
 func New64() hash.Hash64 {
 	return NewS64(0)
 }
