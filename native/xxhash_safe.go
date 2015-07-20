@@ -9,8 +9,8 @@ type byteReader struct {
 	p []byte
 }
 
-func newbyteReader(in *[]byte) *byteReader {
-	return &byteReader{*in}
+func newbyteReader(in []byte) *byteReader {
+	return &byteReader{in}
 }
 
 func (br *byteReader) Uint32(i int) (u uint32) {
