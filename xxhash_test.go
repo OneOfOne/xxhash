@@ -24,6 +24,12 @@ const (
 	expected64 uint64 = 0xFFAE31BEBFED7652
 )
 
+var (
+	benchVal32   uint32
+	benchVal64   uint64
+	benchValByte []byte
+)
+
 func Test(t *testing.T) {
 	t.Logf("CGO version's backend: %s", C.Backend)
 	t.Logf("Native version's backend: %s", N.Backend)
@@ -94,100 +100,133 @@ func TestHash64CgoShort(t *testing.T) {
 }
 
 func BenchmarkXxhash32(b *testing.B) {
+	var bv uint32
 	for i := 0; i < b.N; i++ {
-		N.Checksum32(in)
+		bv = N.Checksum32(in)
 	}
+	benchVal32 = bv
 }
 
 func BenchmarkXxhash32Cgo(b *testing.B) {
+	var bv uint32
 	for i := 0; i < b.N; i++ {
-		C.Checksum32(in)
+		bv = C.Checksum32(in)
 	}
+	benchVal32 = bv
 }
 
 func BenchmarkXxhash64(b *testing.B) {
+	var bv uint64
 	for i := 0; i < b.N; i++ {
-		N.Checksum64(in)
+		bv = N.Checksum64(in)
 	}
+	benchVal64 = bv
 }
 
 func BenchmarkXxhash64Cgo(b *testing.B) {
+	var bv uint64
 	for i := 0; i < b.N; i++ {
-		C.Checksum64(in)
+		bv = C.Checksum64(in)
 	}
+	benchVal64 = bv
 }
 
 func BenchmarkFnv32(b *testing.B) {
+	var bv []byte
 	h := fnv.New32()
 	for i := 0; i < b.N; i++ {
 		h.Write(in)
-		h.Sum(nil)
+		bv = h.Sum(nil)
+		h.Reset()
 	}
+	benchValByte = bv
 }
 
 func BenchmarkFnv64(b *testing.B) {
+	var bv []byte
 	h := fnv.New64()
 	for i := 0; i < b.N; i++ {
 		h.Write(in)
-		h.Sum(nil)
+		bv = h.Sum(nil)
+		h.Reset()
 	}
+	benchValByte = bv
 }
 
 func BenchmarkAdler32(b *testing.B) {
+	var bv uint32
 	for i := 0; i < b.N; i++ {
-		adler32.Checksum(in)
+		bv = adler32.Checksum(in)
 	}
+	benchVal32 = bv
 }
 
 func BenchmarkCRC32IEEE(b *testing.B) {
+	var bv uint32
 	for i := 0; i < b.N; i++ {
-		crc32.ChecksumIEEE(in)
+		bv = crc32.ChecksumIEEE(in)
 	}
+	benchVal32 = bv
 }
 
 func BenchmarkXxhash64VeryShort(b *testing.B) {
+	var bv uint64
 	k := []byte("Test-key-100")
 	for i := 0; i < b.N; i++ {
-		N.Checksum64(k)
+		bv = N.Checksum64(k)
 	}
+	benchVal64 = bv
 }
 
 func BenchmarkFnv64VeryShort(b *testing.B) {
+	var bv []byte
 	k := []byte("Test-key-100")
 	for i := 0; i < b.N; i++ {
 		h := fnv.New64()
 		h.Write(k)
-		h.Sum(nil)
+		bv = h.Sum(nil)
 	}
+	benchValByte = bv
 }
 
 func BenchmarkXxhash64CgoVeryShort(b *testing.B) {
+	var bv uint64
 	k := []byte("Test-key-100")
 	for i := 0; i < b.N; i++ {
-		C.Checksum64(k)
+		bv = C.Checksum64(k)
 	}
+	benchVal64 = bv
 }
 
 func BenchmarkXxhash64MultiWrites(b *testing.B) {
+	var bv uint64
 	h := N.New64()
 	for i := 0; i < b.N; i++ {
 		h.Write(in)
+		bv = h.Sum64()
+		h.Reset()
 	}
-	_ = h.Sum64()
+	benchVal64 = bv
 }
 
 func BenchmarkFnv64MultiWrites(b *testing.B) {
+	var bv uint64
 	h := fnv.New64()
 	for i := 0; i < b.N; i++ {
 		h.Write(in)
+		bv = h.Sum64()
+		h.Reset()
 	}
-	_ = h.Sum64()
+	benchVal64 = bv
 }
 
 func BenchmarkXxhash64CgoMultiWrites(b *testing.B) {
+	var bv uint64
 	h := C.New64()
 	for i := 0; i < b.N; i++ {
 		h.Write(in)
+		bv = h.Sum64()
+		h.Reset()
 	}
-	_ = h.Sum64()
+	benchVal64 = bv
 }

@@ -1,6 +1,9 @@
 package xxhash
 
-import "hash"
+import (
+	"errors"
+	"hash"
+)
 
 const (
 	prime64x1 uint64 = 11400714785074694791
@@ -8,6 +11,11 @@ const (
 	prime64x3        = 1609587929392839161
 	prime64x4        = 9650029242287828579
 	prime64x5        = 2870177450012600261
+)
+
+var (
+	LenErr = errors.New("len(in) - i > 32")
+	CapErr = errors.New("cap(xx.mem) > 32")
 )
 
 func rotl64(x, r uint64) uint64 {
@@ -207,11 +215,11 @@ func (xx *xxHash64) Write(in []byte) (n int, err error) {
 	}
 
 	if l-i > 32 {
-		panic("len(in) - i > 32")
+		return 0, LenErr
 	}
 
 	if cap(xx.mem) > 32 {
-		panic("cap(xx.mem) > 32")
+		return 0, CapErr
 	}
 	return l, nil
 }
