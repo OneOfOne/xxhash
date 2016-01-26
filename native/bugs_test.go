@@ -69,8 +69,8 @@ func TestReset32(t *testing.T) {
 
 // issue 8
 func TestDataLen(t *testing.T) {
-	for i := 4; i < 1024; i += 4 {
-		testEquality(t, bytes.Repeat([]byte("www."), i))
+	for i := 4; i <= 1024; i += 4 {
+		testEquality(t, bytes.Repeat([]byte("www."), i/4))
 	}
 }
 
