@@ -19,7 +19,7 @@ const Backend = "CGO"
 
 type xxHash32 struct {
 	seed  uint32
-	state unsafe.Pointer
+	state *C.XXH32_state_t
 }
 
 // Size returns the number of bytes Sum will return.
@@ -49,20 +49,20 @@ func (xx *xxHash32) Write(p []byte) (n int, err error) {
 	case len(p) > oneGb:
 		return 0, ErrMemoryLimit
 	}
-	C.XXH32_update(xx.state, unsafe.Pointer(&p[0]), C.uint(len(p)))
+	C.XXH32_update(xx.state, unsafe.Pointer(&p[0]), C.size_t(len(p)))
 	return len(p), nil
 }
 
 func (xx *xxHash32) Sum32() uint32 {
-	return uint32(C.XXH32_intermediateDigest(xx.state))
+	return uint32(C.XXH32_digest(xx.state))
 }
 
 // Reset resets the Hash to its initial state.
 func (xx *xxHash32) Reset() {
-	if xx.state != nil {
-		C.XXH32_digest(xx.state)
+	if xx.state == nil {
+		xx.state = C.XXH32_createState()
 	}
-	xx.state = C.XXH32_init(C.uint(xx.seed))
+	C.XXH32_reset(xx.state, C.uint(xx.seed))
 }
 
 // NewS32 creates a new hash.Hash32 computing the 32bit xxHash checksum starting with the specific seed.
@@ -72,7 +72,7 @@ func NewS32(seed uint32) hash.Hash32 {
 	}
 	h.Reset()
 	runtime.SetFinalizer(h, func(h *xxHash32) {
-		C.XXH32_digest(h.state)
+		C.XXH32_freeState(h.state)
 	})
 	return h
 }
@@ -84,7 +84,7 @@ func New32() hash.Hash32 {
 
 // Checksum32S returns the checksum of the input bytes with the specific seed.
 func Checksum32S(in []byte, seed uint32) uint32 {
-	return uint32(C.XXH32(unsafe.Pointer(&in[0]), C.uint(len(in)), C.uint(seed)))
+	return uint32(C.XXH32(unsafe.Pointer(&in[0]), C.size_t(len(in)), C.uint(seed)))
 }
 
 // Checksum32 returns the checksum of the input data with the seed set to 0
@@ -94,8 +94,7 @@ func Checksum32(in []byte) uint32 {
 
 type xxHash64 struct {
 	seed  uint64
-	sum   uint64
-	state unsafe.Pointer
+	state *C.XXH64_state_t
 }
 
 // Size returns the number of bytes Sum will return.
@@ -125,20 +124,21 @@ func (xx *xxHash64) Write(p []byte) (n int, err error) {
 	case len(p) > oneGb:
 		return 0, ErrMemoryLimit
 	}
-	C.XXH64_update(xx.state, unsafe.Pointer(&p[0]), C.uint(len(p)))
+	C.XXH64_update(xx.state, unsafe.Pointer(&p[0]), C.size_t(len(p)))
 	return len(p), nil
 }
 
 func (xx *xxHash64) Sum64() uint64 {
-	return uint64(C.XXH64_intermediateDigest(xx.state))
+	return uint64(C.XXH64_digest(xx.state))
 }
 
 // Reset resets the Hash to its initial state.
 func (xx *xxHash64) Reset() {
-	if xx.state != nil {
-		C.XXH64_digest(xx.state)
+	if xx.state == nil {
+		xx.state = C.XXH64_createState()
 	}
-	xx.state = C.XXH64_init(C.ulonglong(xx.seed))
+	C.XXH64_reset(xx.state, C.ulonglong(xx.seed))
+
 }
 
 // NewS64 creates a new hash.Hash64 computing the 64bit xxHash checksum starting with the specific seed.
@@ -148,7 +148,7 @@ func NewS64(seed uint64) hash.Hash64 {
 	}
 	h.Reset()
 	runtime.SetFinalizer(h, func(h *xxHash64) {
-		C.XXH64_digest(h.state)
+		C.XXH64_freeState(h.state)
 	})
 
 	return h
@@ -161,7 +161,7 @@ func New64() hash.Hash64 {
 
 // Checksum64S returns the checksum of the input bytes with the specific seed.
 func Checksum64S(in []byte, seed uint64) uint64 {
-	return uint64(C.XXH64(unsafe.Pointer(&in[0]), C.uint(len(in)), C.ulonglong(seed)))
+	return uint64(C.XXH64(unsafe.Pointer(&in[0]), C.size_t(len(in)), C.ulonglong(seed)))
 }
 
 // Checksum64 returns the checksum of the input data with the seed set to 0
