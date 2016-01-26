@@ -1,6 +1,7 @@
 # ################################################################
 # xxHash Makefile
-# Copyright (C) Yann Collet 2012-2014
+# Copyright (C) Yann Collet 2012-2015
+#
 # GPL v2 License
 #
 # This program is free software; you can redistribute it and/or modify
@@ -20,49 +21,80 @@
 # You can contact the author at :
 #  - xxHash source repository : http://code.google.com/p/xxhash/
 # ################################################################
-# xxHash.exe : benchmark program, to demonstrate xxHash speed
+# xxhsum : provides 32/64 bits hash of one or multiple files, or stdin
 # ################################################################
 
-CC=gcc
-CFLAGS+= -I. -std=c99 -O3 -Wall -Wextra -Wundef -Wshadow -Wstrict-prototypes
+CFLAGS ?= -O3
+CFLAGS += -std=c99 -Wall -Wextra -Wshadow -Wcast-qual -Wcast-align -Wstrict-prototypes -Wstrict-aliasing=1 -Wswitch-enum -Wundef -pedantic 
+FLAGS  := $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $(MOREFLAGS)
 
 
-OS := $(shell uname)
-ifeq ($(OS),Linux)
-EXT =
-else
+# Define *.exe as extension for Windows systems
+ifneq (,$(filter Windows%,$(OS)))
 EXT =.exe
-endif
-
-# Minimize test target for Travis CI's Build Matrix
-ifeq ($(XXH_TRAVIS_CI_ENV),-m32)
-TEST_TARGETS=test-32
-else ifeq ($(XXH_TRAVIS_CI_ENV),-m64)
-TEST_TARGETS=test-64
 else
-TEST_TARGETS=test-64 test-32
+EXT =
 endif
 
-default: xxHash
+.PHONY: clean all
 
-all: xxHash xxHash32
+default: xxhsum
 
-xxHash: xxhash.c bench.c
-	$(CC)      $(CFLAGS) $^ -o $@$(EXT)
+all: xxhsum xxhsum32 xxhsum_privateXXH
 
-xxHash32: xxhash.c bench.c
-	$(CC) -m32 $(CFLAGS) $^ -o $@$(EXT)
+xxhsum: xxhash.c xxhsum.c
+	$(CC)      $(FLAGS) $^ -o $@$(EXT)
+	ln -sf $@ xxh32sum
+	ln -sf $@ xxh64sum
 
-test: $(TEST_TARGETS)
+xxhsum32: xxhash.c xxhsum.c
+	$(CC) -m32 $(FLAGS) $^ -o $@$(EXT)
 
-test-64: xxHash
-	./xxHash bench.c
-	valgrind ./xxHash -i1 bench.c
+xxhsum_privateXXH: xxhsum.c
+	$(CC) $(FLAGS) -DXXHSUM_INCLUDE_XXHC $^ -o $@$(EXT)
 
-test-32: xxHash32
-	./xxHash32 bench.c
+test: clean xxhsum
+	# stdin
+	./xxhsum < xxhash.c
+	# multiple files
+	./xxhsum *
+	# internal bench
+	./xxhsum -bi1
+	# file bench
+	./xxhsum -bi1 xxhash.c
+	# memory tests
+	valgrind --leak-check=yes --error-exitcode=1 ./xxhsum -bi1 xxhash.c
+	valgrind --leak-check=yes --error-exitcode=1 ./xxhsum -H0 xxhash.c
+	valgrind --leak-check=yes --error-exitcode=1 ./xxhsum -H1 xxhash.c
+
+test32: clean xxhsum32
+	@echo ---- test 32-bits ----
+	./xxhsum32 -bi1 xxhash.c
+
+armtest: clean
+	@echo ---- test ARM compilation ----
+	$(MAKE) xxhsum CC=arm-linux-gnueabi-gcc MOREFLAGS="-Werror"
+
+clangtest: clean
+	@echo ---- test clang compilation ----
+	$(MAKE) all CC=clang MOREFLAGS="-Werror -Wconversion -Wno-sign-conversion"
+
+gpptest: clean
+	@echo ---- test g++ compilation ----
+	$(MAKE) all CC=g++ CFLAGS="-O3 -Wall -Wextra -Wundef -Wshadow -Wcast-align -Werror"
+
+sanitize: clean
+	@echo ---- check undefined behavior - sanitize ----
+	$(MAKE) test CC=clang MOREFLAGS="-g -fsanitize=undefined"
+
+staticAnalyze: clean
+	@echo ---- static analyzer - scan-build ----
+	CFLAGS="-g -Werror" scan-build --status-bugs -v $(MAKE) all
+
+test-all: clean all test test32 armtest clangtest gpptest sanitize staticAnalyze
 
 clean:
-	rm -f core *.o xxHash$(EXT) xxHash32$(EXT)
+	@rm -f core *.o xxhsum$(EXT) xxhsum32$(EXT) xxhsum_privateXXH$(EXT) xxh32sum xxh64sum
+	@echo cleaning completed
 
 
