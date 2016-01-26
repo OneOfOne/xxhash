@@ -1,9 +1,9 @@
 # xxhash [![GoDoc](http://godoc.org/github.com/OneOfOne/xxhash?status.svg)](http://godoc.org/github.com/OneOfOne/xxhash) [![Build Status](https://travis-ci.org/OneOfOne/xxhash.svg?branch=master)](https://travis-ci.org/OneOfOne/xxhash)
 --
 
-[xxhash](https://github.com/Cyan4973/xxHash) ([Copyright](https://github.com/Cyan4973/xxHash/blob/master/LICENSE) (c) 2012-2014, Yann Collet) is an extremely fast non-cryptographic Hash algorithm, working at speeds close to RAM limits.
+This is a CGO wrapper and a native Go implementation of the excellent [xxhash](https://github.com/Cyan4973/xxHash)* algorithm, an extremely fast non-cryptographic Hash algorithm, working at speeds close to RAM limits.
 
-Supports both the 32bit and 64bit versions of the algorithm.
+* The C implementation is ([Copyright](https://github.com/Cyan4973/xxHash/blob/master/LICENSE) (c) 2012-2014, Yann Collet)
 
 ## Install
 
