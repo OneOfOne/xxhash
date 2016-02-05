@@ -3,7 +3,7 @@
 package xxhash
 
 /*
-#cgo CFLAGS: -std=c99 -O2
+#cgo CFLAGS: -O3 -std=c99 -pedantic
 #include "c-trunk/xxhash.c"
 */
 import "C"
@@ -42,9 +42,6 @@ func (xx *xxHash32) Sum(in []byte) []byte {
 }
 
 func (xx *xxHash32) Write(p []byte) (n int, err error) {
-	if len(p) > oneGb {
-		return 0, ErrMemoryLimit
-	}
 	C.XXH32_update(&xx.state, unsafe.Pointer(&p[0]), C.size_t(len(p)))
 	return len(p), nil
 }
@@ -108,9 +105,6 @@ func (xx *xxHash64) Sum(in []byte) []byte {
 }
 
 func (xx *xxHash64) Write(p []byte) (n int, err error) {
-	if len(p) > oneGb {
-		return 0, ErrMemoryLimit
-	}
 	C.XXH64_update(&xx.state, unsafe.Pointer(&p[0]), C.size_t(len(p)))
 	return len(p), nil
 }

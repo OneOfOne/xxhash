@@ -8,7 +8,3 @@ var (
 	// ErrMemoryLimit is returned if you try to call Write with more than 1 Gigabytes of data
 	ErrMemoryLimit = errors.New("cannot use more than 1 Gigabytes of data at once")
 )
-
-const (
-	oneGb = 1 << 30
-)
