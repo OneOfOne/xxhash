@@ -1,9 +1,13 @@
+// +build !safe
 // +build !appengine
 // +build be
 
 package xxhash
 
-import "unsafe"
+import (
+	"log"
+	"unsafe"
+)
 
 // Backend returns the current version of xxhash being used.
 const Backend = "GoUnsafeBigEndian"
@@ -12,11 +16,11 @@ type byteReader struct {
 	p unsafe.Pointer
 }
 
-func newbyteReader(b *[]byte) *byteReader {
-	return &byteReader{unsafe.Pointer(&(*b)[0])}
+func newbyteReader(b []byte) byteReader {
+	return byteReader{unsafe.Pointer(&b[0])}
 }
 
-func (br *byteReader) Uint32(i int) (u uint32) {
+func (br byteReader) Uint32(i int) (u uint32) {
 	u = *(*uint32)(unsafe.Pointer(uintptr(br.p) + uintptr(i)))
 	if isBig {
 		u = swap32be(u)
@@ -24,7 +28,7 @@ func (br *byteReader) Uint32(i int) (u uint32) {
 	return
 }
 
-func (br *byteReader) Uint64(i int) (u uint64) {
+func (br byteReader) Uint64(i int) (u uint64) {
 	u = *(*uint64)(unsafe.Pointer(uintptr(br.p) + uintptr(i)))
 	if isBig {
 		u = swap64be(u)
@@ -32,7 +36,7 @@ func (br *byteReader) Uint64(i int) (u uint64) {
 	return
 }
 
-func (br *byteReader) Byte(i int) byte {
+func (br byteReader) Byte(i int) byte {
 	return *(*byte)(unsafe.Pointer(uintptr(br.p) + uintptr(i)))
 }
 
@@ -58,3 +62,7 @@ var (
 	dummy = [2]byte{1, 0}
 	isBig = *(*int16)(unsafe.Pointer(&dummy[0])) != 1
 )
+
+func init() {
+	log.Printf("%v %v", dummy, isBig)
+}

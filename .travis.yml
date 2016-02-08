@@ -2,6 +2,10 @@ language: go
 sudo: false
 
 go:
-  - 1.4
   - 1.5
   - tip
+
+script:
+  - go test -v -tags safe
+  - go test -v -tags be
+  - go test -v -bench=. -benchmem

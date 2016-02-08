@@ -1,3 +1,4 @@
+// +build !safe
 // +build !appengine
 // +build !be
 
@@ -12,20 +13,20 @@ type byteReader struct {
 	p unsafe.Pointer
 }
 
-func newbyteReader(b []byte) *byteReader {
-	return &byteReader{unsafe.Pointer(&b[0])}
+func newbyteReader(b []byte) byteReader {
+	return byteReader{unsafe.Pointer(&b[0])}
 }
 
-func (br *byteReader) Uint32(i int) (u uint32) {
+func (br byteReader) Uint32(i int) (u uint32) {
 	u = *(*uint32)(unsafe.Pointer(uintptr(br.p) + uintptr(i)))
 	return
 }
 
-func (br *byteReader) Uint64(i int) (u uint64) {
+func (br byteReader) Uint64(i int) (u uint64) {
 	u = *(*uint64)(unsafe.Pointer(uintptr(br.p) + uintptr(i)))
 	return
 }
 
-func (br *byteReader) Byte(i int) byte {
+func (br byteReader) Byte(i int) byte {
 	return *(*byte)(unsafe.Pointer(uintptr(br.p) + uintptr(i)))
 }
