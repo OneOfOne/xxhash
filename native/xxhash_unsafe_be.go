@@ -4,10 +4,7 @@
 
 package xxhash
 
-import (
-	"log"
-	"unsafe"
-)
+import "unsafe"
 
 // Backend returns the current version of xxhash being used.
 const Backend = "GoUnsafeBigEndian"
@@ -62,7 +59,3 @@ var (
 	dummy = [2]byte{1, 0}
 	isBig = *(*int16)(unsafe.Pointer(&dummy[0])) != 1
 )
-
-func init() {
-	log.Printf("%v %v", dummy, isBig)
-}
