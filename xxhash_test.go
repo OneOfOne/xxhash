@@ -6,28 +6,26 @@ import (
 	"hash/fnv"
 	"testing"
 
+	"hash/crc64"
+
 	C "github.com/OneOfOne/xxhash"
 	N "github.com/OneOfOne/xxhash/native"
 )
 
+const inS = `Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+`
+
 var (
-	in = []byte(`Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-`)
+	in = []byte(inS)
 )
 
 const (
 	expected32 uint32 = 0x6101218F
 	expected64 uint64 = 0xFFAE31BEBFED7652
-)
-
-var (
-	benchVal32   uint32
-	benchVal64   uint64
-	benchValByte []byte
 )
 
 func Test(t *testing.T) {
@@ -99,36 +97,60 @@ func TestHash64CgoShort(t *testing.T) {
 	}
 }
 
-func BenchmarkXxhash32(b *testing.B) {
+func BenchmarkXXChecksum32(b *testing.B) {
 	var bv uint32
 	for i := 0; i < b.N; i++ {
-		bv = N.Checksum32(in)
+		bv += N.Checksum32(in)
 	}
-	benchVal32 = bv
 }
 
-func BenchmarkXxhash32Cgo(b *testing.B) {
+func BenchmarkXXChecksum32String(b *testing.B) {
 	var bv uint32
 	for i := 0; i < b.N; i++ {
-		bv = C.Checksum32(in)
+		bv += N.ChecksumString32(inS)
 	}
-	benchVal32 = bv
 }
 
-func BenchmarkXxhash64(b *testing.B) {
-	var bv uint64
+func BenchmarkXXChecksum32Cgo(b *testing.B) {
+	var bv uint32
 	for i := 0; i < b.N; i++ {
-		bv = N.Checksum64(in)
+		bv += C.Checksum32(in)
 	}
-	benchVal64 = bv
 }
 
-func BenchmarkXxhash64Cgo(b *testing.B) {
+func BenchmarkXXChecksum64(b *testing.B) {
 	var bv uint64
 	for i := 0; i < b.N; i++ {
-		bv = C.Checksum64(in)
+		bv += N.Checksum64(in)
 	}
-	benchVal64 = bv
+}
+
+func BenchmarkXXChecksum64String(b *testing.B) {
+	var bv uint64
+	for i := 0; i < b.N; i++ {
+		bv += N.ChecksumString64(inS)
+	}
+}
+
+func BenchmarkXXChecksum32StringCgo(b *testing.B) {
+	var bv uint32
+	for i := 0; i < b.N; i++ {
+		bv += C.ChecksumString32(inS)
+	}
+}
+
+func BenchmarkXXChecksum64Cgo(b *testing.B) {
+	var bv uint64
+	for i := 0; i < b.N; i++ {
+		bv += C.Checksum64(in)
+	}
+}
+
+func BenchmarkXXChecksum64StringCgo(b *testing.B) {
+	var bv uint64
+	for i := 0; i < b.N; i++ {
+		bv += C.ChecksumString64(inS)
+	}
 }
 
 func BenchmarkFnv32(b *testing.B) {
@@ -139,7 +161,7 @@ func BenchmarkFnv32(b *testing.B) {
 		bv = h.Sum(nil)
 		h.Reset()
 	}
-	benchValByte = bv
+	_ = bv
 }
 
 func BenchmarkFnv64(b *testing.B) {
@@ -150,35 +172,96 @@ func BenchmarkFnv64(b *testing.B) {
 		bv = h.Sum(nil)
 		h.Reset()
 	}
-	benchValByte = bv
+	_ = bv
 }
 
 func BenchmarkAdler32(b *testing.B) {
 	var bv uint32
 	for i := 0; i < b.N; i++ {
-		bv = adler32.Checksum(in)
+		bv += adler32.Checksum(in)
 	}
-	benchVal32 = bv
 }
 
 func BenchmarkCRC32IEEE(b *testing.B) {
 	var bv uint32
 	for i := 0; i < b.N; i++ {
-		bv = crc32.ChecksumIEEE(in)
+		bv += crc32.ChecksumIEEE(in)
 	}
-	benchVal32 = bv
 }
 
-func BenchmarkXxhash64VeryShort(b *testing.B) {
+func BenchmarkCRC32IEEEString(b *testing.B) {
+	var bv uint32
+	for i := 0; i < b.N; i++ {
+		bv += crc32.ChecksumIEEE([]byte(inS))
+	}
+}
+
+var crc64ISO = crc64.MakeTable(crc64.ISO)
+
+func BenchmarkCRC64ISO(b *testing.B) {
+	var bv uint64
+	for i := 0; i < b.N; i++ {
+		bv += crc64.Checksum(in, crc64ISO)
+	}
+}
+
+func BenchmarkCRC64ISOString(b *testing.B) {
+	var bv uint64
+	for i := 0; i < b.N; i++ {
+		bv += crc64.Checksum([]byte(inS), crc64ISO)
+	}
+}
+
+func BenchmarkXXChecksum64Short(b *testing.B) {
 	var bv uint64
 	k := []byte("Test-key-100")
 	for i := 0; i < b.N; i++ {
-		bv = N.Checksum64(k)
+		bv += N.Checksum64(k)
 	}
-	benchVal64 = bv
 }
 
-func BenchmarkFnv64VeryShort(b *testing.B) {
+func BenchmarkXXChecksumString64Short(b *testing.B) {
+	var bv uint64
+	k := "Test-key-100"
+	for i := 0; i < b.N; i++ {
+		bv += N.ChecksumString64(k)
+	}
+}
+
+func BenchmarkXXChecksum64ShortCgo(b *testing.B) {
+	var bv uint64
+	k := []byte("Test-key-100")
+	for i := 0; i < b.N; i++ {
+		bv += C.Checksum64(k)
+	}
+}
+
+func BenchmarkXXChecksumString64CgoShort(b *testing.B) {
+	var bv uint64
+	k := "Test-key-100"
+	for i := 0; i < b.N; i++ {
+		bv += C.ChecksumString64(k)
+	}
+}
+
+func BenchmarkCRC32IEEEShort(b *testing.B) {
+	var bv uint32
+	k := []byte("Test-key-100")
+
+	for i := 0; i < b.N; i++ {
+		bv += crc32.ChecksumIEEE(k)
+	}
+}
+
+func BenchmarkCRC64ISOShort(b *testing.B) {
+	var bv uint64
+	k := []byte("Test-key-100")
+	for i := 0; i < b.N; i++ {
+		bv += crc64.Checksum(k, crc64ISO)
+	}
+}
+
+func BenchmarkFnv64Short(b *testing.B) {
 	var bv []byte
 	k := []byte("Test-key-100")
 	for i := 0; i < b.N; i++ {
@@ -186,27 +269,27 @@ func BenchmarkFnv64VeryShort(b *testing.B) {
 		h.Write(k)
 		bv = h.Sum(nil)
 	}
-	benchValByte = bv
+	_ = bv
 }
 
-func BenchmarkXxhash64CgoVeryShort(b *testing.B) {
-	var bv uint64
-	k := []byte("Test-key-100")
-	for i := 0; i < b.N; i++ {
-		bv = C.Checksum64(k)
-	}
-	benchVal64 = bv
-}
-
-func BenchmarkXxhash64MultiWrites(b *testing.B) {
+func BenchmarkXX64MultiWrites(b *testing.B) {
 	var bv uint64
 	h := N.New64()
 	for i := 0; i < b.N; i++ {
 		h.Write(in)
-		bv = h.Sum64()
+		bv += h.Sum64()
 		h.Reset()
 	}
-	benchVal64 = bv
+}
+
+func BenchmarkXX64CgoMultiWrites(b *testing.B) {
+	var bv uint64
+	h := C.New64()
+	for i := 0; i < b.N; i++ {
+		h.Write(in)
+		bv += h.Sum64()
+		h.Reset()
+	}
 }
 
 func BenchmarkFnv64MultiWrites(b *testing.B) {
@@ -214,19 +297,7 @@ func BenchmarkFnv64MultiWrites(b *testing.B) {
 	h := fnv.New64()
 	for i := 0; i < b.N; i++ {
 		h.Write(in)
-		bv = h.Sum64()
+		bv += h.Sum64()
 		h.Reset()
 	}
-	benchVal64 = bv
-}
-
-func BenchmarkXxhash64CgoMultiWrites(b *testing.B) {
-	var bv uint64
-	h := C.New64()
-	for i := 0; i < b.N; i++ {
-		h.Write(in)
-		bv = h.Sum64()
-		h.Reset()
-	}
-	benchVal64 = bv
 }
