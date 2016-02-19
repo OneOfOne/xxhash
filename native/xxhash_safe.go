@@ -23,3 +23,27 @@ func (br byteReader) Uint64(i int) (u uint64) {
 func (br byteReader) Byte(i int) byte {
 	return br[i]
 }
+
+func (xx *XXHash32) WriteString(s string) (int, error) {
+	return xx.Write([]byte(s))
+}
+
+func (xx *XXHash64) WriteString(s string) (int, error) {
+	return xx.Write([]byte(s))
+}
+
+func ChecksumString32(s string) uint32 {
+	return Checksum32([]byte(s))
+}
+
+func ChecksumString32S(s string, seed uint32) uint32 {
+	return Checksum32S([]byte(s), seed)
+}
+
+func ChecksumString64(s string) uint64 {
+	return Checksum64([]byte(s))
+}
+
+func ChecksumString64S(s string, seed uint64) uint64 {
+	return Checksum64S([]byte(s), seed)
+}

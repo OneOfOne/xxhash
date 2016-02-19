@@ -4,7 +4,15 @@
 
 package xxhash
 
-import "unsafe"
+import (
+	"reflect"
+	"unsafe"
+)
+
+var (
+	dummy = [2]byte{1, 0}
+	isBig = *(*int16)(unsafe.Pointer(&dummy[0])) != 1
+)
 
 // Backend returns the current version of xxhash being used.
 const Backend = "GoUnsafeBigEndian"
@@ -45,17 +53,31 @@ func swap32be(x uint32) uint32 {
 }
 
 func swap64be(x uint64) uint64 {
-	return ((x << 56) & 0xff00000000000000) |
-		((x << 40) & 0x00ff000000000000) |
-		((x << 24) & 0x0000ff0000000000) |
-		((x << 8) & 0x000000ff00000000) |
-		((x >> 8) & 0x00000000ff000000) |
-		((x >> 24) & 0x0000000000ff0000) |
-		((x >> 40) & 0x000000000000ff00) |
-		((x >> 56) & 0x00000000000000ff)
+	x = (0xff00ff00ff00ff & (x >> 8)) | ((0xff00ff00ff00ff & x) << 8)
+	x = (0xffff0000ffff & (x >> 16)) | ((0xffff0000ffff & x) << 16)
+	return (0xffffffff & (x >> 32)) | ((0xffffffff & x) << 32)
 }
 
-var (
-	dummy = [2]byte{1, 0}
-	isBig = *(*int16)(unsafe.Pointer(&dummy[0])) != 1
-)
+func ChecksumString32(s string) uint32 {
+	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+	ss.Cap = ss.Len
+	return Checksum32(*(*[]byte)(unsafe.Pointer(ss)))
+}
+
+func ChecksumString32S(s string, seed uint32) uint32 {
+	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+	ss.Cap = ss.Len
+	return Checksum32S(*(*[]byte)(unsafe.Pointer(ss)), seed)
+}
+
+func ChecksumString64(s string) uint64 {
+	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+	ss.Cap = ss.Len
+	return Checksum64(*(*[]byte)(unsafe.Pointer(ss)))
+}
+
+func ChecksumString64S(s string, seed uint64) uint64 {
+	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+	ss.Cap = ss.Len
+	return Checksum64S(*(*[]byte)(unsafe.Pointer(ss)), seed)
+}

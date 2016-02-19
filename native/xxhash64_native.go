@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	prime64x1 uint64 = 11400714785074694791
-	prime64x2        = 14029467366897019727
-	prime64x3        = 1609587929392839161
-	prime64x4        = 9650029242287828579
-	prime64x5        = 2870177450012600261
+	prime64x1 = 11400714785074694791
+	prime64x2 = 14029467366897019727
+	prime64x3 = 1609587929392839161
+	prime64x4 = 9650029242287828579
+	prime64x5 = 2870177450012600261
 )
 
 var (
@@ -110,14 +110,16 @@ func Checksum64(in []byte) uint64 {
 	return Checksum64S(in, 0)
 }
 
-type xxHash64 struct {
+type XXHash64 struct {
 	ln                   uint64
 	seed, v1, v2, v3, v4 uint64
 	mem                  []byte
 }
 
+var _ hash.Hash64 = (*XXHash64)(nil)
+
 // Size returns the number of bytes Sum will return.
-func (xx *xxHash64) Size() int {
+func (xx *XXHash64) Size() int {
 	return 8
 }
 
@@ -125,13 +127,13 @@ func (xx *xxHash64) Size() int {
 // The Write method must be able to accept any amount
 // of data, but it may operate more efficiently if all writes
 // are a multiple of the block size.
-func (xx *xxHash64) BlockSize() int {
+func (xx *XXHash64) BlockSize() int {
 	return 32
 }
 
 // NewS64 creates a new hash.Hash64 computing the 64bit xxHash checksum starting with the specific seed.
-func NewS64(seed uint64) (xx hash.Hash64) {
-	xx = &xxHash64{
+func NewS64(seed uint64) (xx *XXHash64) {
+	xx = &XXHash64{
 		seed: seed,
 		mem:  make([]byte, 32),
 	}
@@ -140,11 +142,11 @@ func NewS64(seed uint64) (xx hash.Hash64) {
 }
 
 // New64 creates a new hash.Hash64 computing the 64bit xxHash checksum starting with the seed set to 0x0.
-func New64() hash.Hash64 {
+func New64() *XXHash64 {
 	return NewS64(0)
 }
 
-func (xx *xxHash64) Reset() {
+func (xx *XXHash64) Reset() {
 	xx.v1 = xx.seed + prime64x1 + prime64x2
 	xx.v2 = xx.seed + prime64x2
 	xx.v3 = xx.seed
@@ -153,7 +155,7 @@ func (xx *xxHash64) Reset() {
 	xx.mem = xx.mem[:0]
 }
 
-func (xx *xxHash64) Write(in []byte) (n int, err error) {
+func (xx *XXHash64) Write(in []byte) (n int, err error) {
 	i, l, ml := 0, len(in), len(xx.mem)
 	xx.ln += uint64(l)
 	if d := 32 - ml; ml > 0 && ml+l > 32 {
@@ -224,7 +226,7 @@ func (xx *xxHash64) Write(in []byte) (n int, err error) {
 	return l, nil
 }
 
-func (xx *xxHash64) Sum64() (h uint64) {
+func (xx *XXHash64) Sum64() (h uint64) {
 	i, l := 0, len(xx.mem)
 	v1, v2, v3, v4 := xx.v1, xx.v2, xx.v3, xx.v4
 	if xx.ln >= 32 {
@@ -290,7 +292,7 @@ func (xx *xxHash64) Sum64() (h uint64) {
 
 // Sum appends the current hash to b and returns the resulting slice.
 // It does not change the underlying hash state.
-func (xx *xxHash64) Sum(in []byte) []byte {
+func (xx *XXHash64) Sum(in []byte) []byte {
 	s := xx.Sum64()
 	return append(in, byte(s>>56), byte(s>>48), byte(s>>40), byte(s>>32), byte(s>>24), byte(s>>16), byte(s>>8), byte(s))
 }
