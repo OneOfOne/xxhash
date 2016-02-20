@@ -50,9 +50,8 @@ func (xx *XXHash32) Write(p []byte) (n int, err error) {
 }
 
 func (xx *XXHash32) WriteString(s string) (int, error) {
-	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-	ss.Cap = ss.Len
-	return xx.Write(*(*[]byte)(unsafe.Pointer(ss)))
+	ss := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	return xx.Write((*[0x7fffffff]byte)(unsafe.Pointer(ss.Data))[:len(s):len(s)])
 }
 
 func (xx *XXHash32) Sum32() uint32 {
@@ -121,9 +120,8 @@ func (xx *XXHash64) Write(p []byte) (n int, err error) {
 }
 
 func (xx *XXHash64) WriteString(s string) (int, error) {
-	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-	ss.Cap = ss.Len
-	return xx.Write(*(*[]byte)(unsafe.Pointer(ss)))
+	ss := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	return xx.Write((*[0x7fffffff]byte)(unsafe.Pointer(ss.Data))[:len(s):len(s)])
 }
 
 func (xx *XXHash64) Sum64() uint64 {
@@ -161,25 +159,19 @@ func Checksum64(in []byte) uint64 {
 }
 
 func ChecksumString32(s string) uint32 {
-	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-	ss.Cap = ss.Len
-	return Checksum32(*(*[]byte)(unsafe.Pointer(ss)))
+	return ChecksumString32S(s, 0)
 }
 
 func ChecksumString32S(s string, seed uint32) uint32 {
-	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-	ss.Cap = ss.Len
-	return Checksum32S(*(*[]byte)(unsafe.Pointer(ss)), seed)
+	ss := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	return Checksum32S((*[0x7fffffff]byte)(unsafe.Pointer(ss.Data))[:len(s):len(s)], seed)
 }
 
 func ChecksumString64(s string) uint64 {
-	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-	ss.Cap = ss.Len
-	return Checksum64(*(*[]byte)(unsafe.Pointer(ss)))
+	return ChecksumString64S(s, 0)
 }
 
 func ChecksumString64S(s string, seed uint64) uint64 {
-	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-	ss.Cap = ss.Len
-	return Checksum64S(*(*[]byte)(unsafe.Pointer(ss)), seed)
+	ss := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	return Checksum64S((*[0x7fffffff]byte)(unsafe.Pointer(ss.Data))[:len(s):len(s)], seed)
 }

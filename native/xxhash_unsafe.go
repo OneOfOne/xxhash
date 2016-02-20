@@ -34,19 +34,16 @@ func (br byteReader) Byte(i int) byte {
 }
 
 func ChecksumString32S(s string, seed uint32) uint32 {
-	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-	ss.Cap = ss.Len
-	return Checksum32S(*(*[]byte)(unsafe.Pointer(ss)), seed)
+	ss := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	return Checksum32S((*[0x7fffffff]byte)(unsafe.Pointer(ss.Data))[:len(s):len(s)], seed)
 }
 
 func ChecksumString64S(s string, seed uint64) uint64 {
-	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-	ss.Cap = ss.Len
-	return Checksum64S(*(*[]byte)(unsafe.Pointer(ss)), seed)
+	ss := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	return Checksum64S((*[0x7fffffff]byte)(unsafe.Pointer(ss.Data))[:len(s):len(s)], seed)
 }
 
 func writeString(w io.Writer, s string) (int, error) {
-	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-	ss.Cap = ss.Len
-	return w.Write(*(*[]byte)(unsafe.Pointer(ss)))
+	ss := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	return w.Write((*[0x7fffffff]byte)(unsafe.Pointer(ss.Data))[:len(s):len(s)])
 }
