@@ -86,7 +86,7 @@ Or to install the CGO wrapper over the original C code (only recommended if hash
 
 [Apache v2.0](http://opensource.org/licenses/Apache-2.0)
 
-Copyright 2016 [OneOfOne](https://github.com/OneOfOne/)
+Copyright 2015-2016 Ahmed <[OneOfOne](https://github.com/OneOfOne/)> W.
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
