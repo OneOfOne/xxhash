@@ -1,10 +1,11 @@
 // +build cgo
 
+//go:generate git subtree pull --prefix vendor/xxHash https://github.com/Cyan4973/xxHash master --squash
 package xxhash
 
 /*
 #cgo CFLAGS: -O3 -std=c99 -pedantic
-#include "c-trunk/xxhash.c"
+#include "vendor/xxHash/xxhash.c"
 */
 import "C"
 
