@@ -110,6 +110,7 @@ func Checksum64(in []byte) uint64 {
 	return Checksum64S(in, 0)
 }
 
+// ChecksumString64 returns the checksum of the input data, without creating a copy, with the seed set to 0.
 func ChecksumString64(s string) uint64 {
 	return ChecksumString64S(s, 0)
 }

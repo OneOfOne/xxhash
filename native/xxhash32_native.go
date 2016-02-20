@@ -69,11 +69,12 @@ func Checksum32S(in []byte, seed uint32) (h uint32) {
 	return
 }
 
-// Checksum32 returns the checksum of the input data with the seed set to 0
+// Checksum32 returns the checksum of the input data with the seed set to 0.
 func Checksum32(in []byte) uint32 {
 	return Checksum32S(in, 0)
 }
 
+// ChecksumString32 returns the checksum of the input data, without creating a copy, with the seed set to 0.
 func ChecksumString32(s string) uint32 {
 	return ChecksumString32S(s, 0)
 }
@@ -112,9 +113,9 @@ func NewS32(seed uint32) (xx *XXHash32) {
 	return
 }
 
-// New32 creates a new hash.Hash32 computing the 32bit xxHash checksum starting with the seed set to 0x0.
+// New32 creates a new hash.Hash32 computing the 32bit xxHash checksum starting with the seed set to 0.
 func New32() *XXHash32 {
-	return NewS32(0x0)
+	return NewS32(0)
 }
 
 func (xx *XXHash32) Reset() {

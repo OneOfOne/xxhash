@@ -1,7 +1,8 @@
 // +build cgo
 
-//go:generate git subtree pull --prefix vendor/xxHash https://github.com/Cyan4973/xxHash master --squash
 package xxhash
+
+//go:generate git subtree pull --prefix vendor/xxHash https://github.com/Cyan4973/xxHash master --squash
 
 /*
 #cgo CFLAGS: -O3 -std=c99 -pedantic
@@ -23,7 +24,10 @@ type XXHash32 struct {
 	state C.XXH32_state_t
 }
 
-var _ hash.Hash32 = (*XXHash32)(nil)
+var _ interface {
+	hash.Hash32
+	WriteString(string) (int, error)
+} = (*XXHash32)(nil)
 
 // Size returns the number of bytes Sum will return.
 func (xx *XXHash32) Size() int {
@@ -73,19 +77,30 @@ func NewS32(seed uint32) *XXHash32 {
 	return h
 }
 
-// New32 creates a new hash.Hash32 computing the 32bit xxHash checksum starting with the seed set to 0x0.
+// New32 creates a new hash.Hash32 computing the 32bit xxHash checksum starting with the seed set to 0.
 func New32() *XXHash32 {
-	return NewS32(0x0)
+	return NewS32(0)
 }
 
-// Checksum32S returns the checksum of the input bytes with the specific seed.
+// Checksum32S returns the checksum of the input data with the specific seed.
 func Checksum32S(in []byte, seed uint32) uint32 {
 	return uint32(C.XXH32(unsafe.Pointer(&in[0]), C.size_t(len(in)), C.uint(seed)))
 }
 
 // Checksum32 returns the checksum of the input data with the seed set to 0
 func Checksum32(in []byte) uint32 {
-	return Checksum32S(in, 0x0)
+	return Checksum32S(in, 0)
+}
+
+// ChecksumString32 returns the checksum of the input data, without creating a copy, with the seed set to 0.
+func ChecksumString32(s string) uint32 {
+	return ChecksumString32S(s, 0)
+}
+
+// ChecksumString32S returns the checksum of the input data, without creating a copy, with the specific seed.
+func ChecksumString32S(s string, seed uint32) uint32 {
+	ss := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	return Checksum32S((*[0x7fffffff]byte)(unsafe.Pointer(ss.Data))[:len(s):len(s)], seed)
 }
 
 type XXHash64 struct {
@@ -93,7 +108,10 @@ type XXHash64 struct {
 	state C.XXH64_state_t
 }
 
-var _ hash.Hash64 = (*XXHash64)(nil)
+var _ interface {
+	hash.Hash64
+	WriteString(string) (int, error)
+} = (*XXHash64)(nil)
 
 // Size returns the number of bytes Sum will return.
 func (xx *XXHash64) Size() int {
@@ -144,9 +162,9 @@ func NewS64(seed uint64) *XXHash64 {
 	return h
 }
 
-// New64 creates a new hash.Hash64 computing the 64bit xxHash checksum starting with the seed set to 0x0.
+// New64 creates a new hash.Hash64 computing the 64bit xxHash checksum starting with the seed set to 0.
 func New64() *XXHash64 {
-	return NewS64(0x0)
+	return NewS64(0)
 }
 
 // Checksum64S returns the checksum of the input bytes with the specific seed.
@@ -154,24 +172,17 @@ func Checksum64S(in []byte, seed uint64) uint64 {
 	return uint64(C.XXH64(unsafe.Pointer(&in[0]), C.size_t(len(in)), C.ulonglong(seed)))
 }
 
-// Checksum64 returns the checksum of the input data with the seed set to 0
+// Checksum64 returns the checksum of the input data with the seed set to 0.
 func Checksum64(in []byte) uint64 {
-	return Checksum64S(in, 0x0)
+	return Checksum64S(in, 0)
 }
 
-func ChecksumString32(s string) uint32 {
-	return ChecksumString32S(s, 0)
-}
-
-func ChecksumString32S(s string, seed uint32) uint32 {
-	ss := (*reflect.StringHeader)(unsafe.Pointer(&s))
-	return Checksum32S((*[0x7fffffff]byte)(unsafe.Pointer(ss.Data))[:len(s):len(s)], seed)
-}
-
+// ChecksumString64 returns the checksum of the input data, without creating a copy, with the seed set to 0.
 func ChecksumString64(s string) uint64 {
 	return ChecksumString64S(s, 0)
 }
 
+// ChecksumString64S returns the checksum of the input data, without creating a copy, with the specific seed.
 func ChecksumString64S(s string, seed uint64) uint64 {
 	ss := (*reflect.StringHeader)(unsafe.Pointer(&s))
 	return Checksum64S((*[0x7fffffff]byte)(unsafe.Pointer(ss.Data))[:len(s):len(s)], seed)
