@@ -2,6 +2,11 @@
 
 package xxhash
 
+import (
+	"io"
+	"strings"
+)
+
 // Backend returns the current version of xxhash being used.
 const Backend = "GoSafe"
 
@@ -24,26 +29,15 @@ func (br byteReader) Byte(i int) byte {
 	return br[i]
 }
 
-func (xx *XXHash32) WriteString(s string) (int, error) {
-	return xx.Write([]byte(s))
-}
-
-func (xx *XXHash64) WriteString(s string) (int, error) {
-	return xx.Write([]byte(s))
-}
-
-func ChecksumString32(s string) uint32 {
-	return Checksum32([]byte(s))
-}
-
 func ChecksumString32S(s string, seed uint32) uint32 {
 	return Checksum32S([]byte(s), seed)
 }
 
-func ChecksumString64(s string) uint64 {
-	return Checksum64([]byte(s))
-}
-
 func ChecksumString64S(s string, seed uint64) uint64 {
 	return Checksum64S([]byte(s), seed)
+}
+
+func writeString(w io.Writer, s string) (int, error) {
+	n, err := io.Copy(w, struct{ io.Reader }{strings.NewReader(s)})
+	return int(n), err
 }

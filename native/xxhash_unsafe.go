@@ -5,6 +5,7 @@
 package xxhash
 
 import (
+	"io"
 	"reflect"
 	"unsafe"
 )
@@ -32,38 +33,20 @@ func (br byteReader) Byte(i int) byte {
 	return *(*byte)(unsafe.Pointer(uintptr(br.p) + uintptr(i)))
 }
 
-func (xx *XXHash32) WriteString(s string) (int, error) {
-	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-	ss.Cap = ss.Len
-	return xx.Write(*(*[]byte)(unsafe.Pointer(ss)))
-}
-
-func (xx *XXHash64) WriteString(s string) (int, error) {
-	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-	ss.Cap = ss.Len
-	return xx.Write(*(*[]byte)(unsafe.Pointer(ss)))
-}
-
-func ChecksumString32(s string) uint32 {
-	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-	ss.Cap = ss.Len
-	return Checksum32(*(*[]byte)(unsafe.Pointer(ss)))
-}
-
 func ChecksumString32S(s string, seed uint32) uint32 {
 	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
 	ss.Cap = ss.Len
 	return Checksum32S(*(*[]byte)(unsafe.Pointer(ss)), seed)
 }
 
-func ChecksumString64(s string) uint64 {
-	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-	ss.Cap = ss.Len
-	return Checksum64(*(*[]byte)(unsafe.Pointer(ss)))
-}
-
 func ChecksumString64S(s string, seed uint64) uint64 {
 	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
 	ss.Cap = ss.Len
 	return Checksum64S(*(*[]byte)(unsafe.Pointer(ss)), seed)
+}
+
+func writeString(w io.Writer, s string) (int, error) {
+	ss := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+	ss.Cap = ss.Len
+	return w.Write(*(*[]byte)(unsafe.Pointer(ss)))
 }

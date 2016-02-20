@@ -74,13 +74,20 @@ func Checksum32(in []byte) uint32 {
 	return Checksum32S(in, 0)
 }
 
+func ChecksumString32(s string) uint32 {
+	return ChecksumString32S(s, 0)
+}
+
 type XXHash32 struct {
 	ln                   uint64
 	seed, v1, v2, v3, v4 uint32
 	mem                  []byte
 }
 
-var _ hash.Hash32 = (*XXHash32)(nil)
+var _ interface {
+	hash.Hash32
+	WriteString(string) (int, error)
+} = (*XXHash32)(nil)
 
 // Size returns the number of bytes Sum will return.
 func (xx *XXHash32) Size() int {
@@ -190,6 +197,10 @@ func (xx *XXHash32) Write(in []byte) (n int, err error) {
 	}
 
 	return l, nil
+}
+
+func (xx *XXHash32) WriteString(s string) (int, error) {
+	return writeString(xx, s)
 }
 
 func (xx *XXHash32) Sum32() (h uint32) {

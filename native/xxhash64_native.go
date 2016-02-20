@@ -110,13 +110,20 @@ func Checksum64(in []byte) uint64 {
 	return Checksum64S(in, 0)
 }
 
+func ChecksumString64(s string) uint64 {
+	return ChecksumString64S(s, 0)
+}
+
 type XXHash64 struct {
 	ln                   uint64
 	seed, v1, v2, v3, v4 uint64
 	mem                  []byte
 }
 
-var _ hash.Hash64 = (*XXHash64)(nil)
+var _ interface {
+	hash.Hash64
+	WriteString(string) (int, error)
+} = (*XXHash64)(nil)
 
 // Size returns the number of bytes Sum will return.
 func (xx *XXHash64) Size() int {
@@ -224,6 +231,10 @@ func (xx *XXHash64) Write(in []byte) (n int, err error) {
 		return 0, CapErr
 	}
 	return l, nil
+}
+
+func (xx *XXHash64) WriteString(s string) (int, error) {
+	return writeString(xx, s)
 }
 
 func (xx *XXHash64) Sum64() (h uint64) {

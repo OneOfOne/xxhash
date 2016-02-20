@@ -3,10 +3,9 @@ package xxhash_test
 import (
 	"hash/adler32"
 	"hash/crc32"
+	"hash/crc64"
 	"hash/fnv"
 	"testing"
-
-	"hash/crc64"
 
 	C "github.com/OneOfOne/xxhash"
 	N "github.com/OneOfOne/xxhash/native"
@@ -31,6 +30,7 @@ const (
 func Test(t *testing.T) {
 	t.Logf("CGO version's backend: %s", C.Backend)
 	t.Logf("Native version's backend: %s", N.Backend)
+	t.Logf("Benchmark string len: %d", len(inS))
 }
 
 func TestHash32(t *testing.T) {
@@ -118,6 +118,13 @@ func BenchmarkXXChecksum32Cgo(b *testing.B) {
 	}
 }
 
+func BenchmarkXXChecksum32StringCgo(b *testing.B) {
+	var bv uint32
+	for i := 0; i < b.N; i++ {
+		bv += C.ChecksumString32(inS)
+	}
+}
+
 func BenchmarkXXChecksum64(b *testing.B) {
 	var bv uint64
 	for i := 0; i < b.N; i++ {
@@ -129,13 +136,6 @@ func BenchmarkXXChecksum64String(b *testing.B) {
 	var bv uint64
 	for i := 0; i < b.N; i++ {
 		bv += N.ChecksumString64(inS)
-	}
-}
-
-func BenchmarkXXChecksum32StringCgo(b *testing.B) {
-	var bv uint32
-	for i := 0; i < b.N; i++ {
-		bv += C.ChecksumString32(inS)
 	}
 }
 
