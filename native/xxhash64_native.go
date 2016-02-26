@@ -308,3 +308,16 @@ func (xx *XXHash64) Sum(in []byte) []byte {
 	s := xx.Sum64()
 	return append(in, byte(s>>56), byte(s>>48), byte(s>>40), byte(s>>32), byte(s>>24), byte(s>>16), byte(s>>8), byte(s))
 }
+
+func swap32(x uint32) uint32 {
+	return ((x << 24) & 0xff000000) |
+		((x << 8) & 0x00ff0000) |
+		((x >> 8) & 0x0000ff00) |
+		((x >> 24) & 0x000000ff)
+}
+
+func swap64(x uint64) uint64 {
+	x = (0xff00ff00ff00ff & (x >> 8)) | ((0xff00ff00ff00ff & x) << 8)
+	x = (0xffff0000ffff & (x >> 16)) | ((0xffff0000ffff & x) << 16)
+	return (0xffffffff & (x >> 32)) | ((0xffffffff & x) << 32)
+}

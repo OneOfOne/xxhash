@@ -30,6 +30,7 @@ const (
 func Test(t *testing.T) {
 	t.Logf("CGO version's backend: %s", CGO.Backend)
 	t.Logf("Native version's backend: %s", N.Backend)
+	t.Logf("Native is big endian: %v", N.IsBigEndian)
 	t.Logf("Benchmark string len: %d", len(inS))
 }
 
@@ -104,17 +105,24 @@ func BenchmarkXXChecksum32(b *testing.B) {
 	}
 }
 
-func BenchmarkXXChecksum32String(b *testing.B) {
+func BenchmarkXXChecksum32Cgo(b *testing.B) {
+	var bv uint32
+	for i := 0; i < b.N; i++ {
+		bv += CGO.Checksum32(in)
+	}
+}
+
+func BenchmarkXXChecksumString32(b *testing.B) {
 	var bv uint32
 	for i := 0; i < b.N; i++ {
 		bv += N.ChecksumString32(inS)
 	}
 }
 
-func BenchmarkXXChecksum32Cgo(b *testing.B) {
+func BenchmarkXXChecksumString32Cgo(b *testing.B) {
 	var bv uint32
 	for i := 0; i < b.N; i++ {
-		bv += CGO.Checksum32(in)
+		bv += CGO.ChecksumString32(inS)
 	}
 }
 
@@ -125,20 +133,6 @@ func BenchmarkXXChecksum64(b *testing.B) {
 	}
 }
 
-func BenchmarkXXChecksum64String(b *testing.B) {
-	var bv uint64
-	for i := 0; i < b.N; i++ {
-		bv += N.ChecksumString64(inS)
-	}
-}
-
-func BenchmarkXXChecksum32StringCgo(b *testing.B) {
-	var bv uint32
-	for i := 0; i < b.N; i++ {
-		bv += CGO.ChecksumString32(inS)
-	}
-}
-
 func BenchmarkXXChecksum64Cgo(b *testing.B) {
 	var bv uint64
 	for i := 0; i < b.N; i++ {
@@ -146,7 +140,14 @@ func BenchmarkXXChecksum64Cgo(b *testing.B) {
 	}
 }
 
-func BenchmarkXXChecksum64StringCgo(b *testing.B) {
+func BenchmarkXXChecksumString64(b *testing.B) {
+	var bv uint64
+	for i := 0; i < b.N; i++ {
+		bv += N.ChecksumString64(inS)
+	}
+}
+
+func BenchmarkXXChecksumString64Cgo(b *testing.B) {
 	var bv uint64
 	for i := 0; i < b.N; i++ {
 		bv += CGO.ChecksumString64(inS)
