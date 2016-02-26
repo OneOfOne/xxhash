@@ -21,6 +21,7 @@ func (br byteReader) Uint32(i int) (u uint32) {
 	if IsBigEndian {
 		u = swap32(u)
 	}
+	return
 }
 
 func (br byteReader) Uint64(i int) (u uint64) {

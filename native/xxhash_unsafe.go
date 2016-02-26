@@ -1,6 +1,5 @@
 // +build !safe
 // +build !appengine
-// +build !be
 
 package xxhash
 

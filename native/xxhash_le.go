@@ -1,4 +1,4 @@
-// +build !ppc64,!mips64
+// +build !ppc64,!mips64,!be
 
 package xxhash
 
