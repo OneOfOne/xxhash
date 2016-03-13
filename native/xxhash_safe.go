@@ -14,12 +14,14 @@ func newbyteReader(in []byte) byteReader {
 }
 
 func (br byteReader) Uint32(i int) uint32 {
-	return uint32(br[i]) | uint32(br[i+1])<<8 | uint32(br[i+2])<<16 | uint32(br[i+3])<<24
+	br = br[i : i+4]
+	return uint32(br[0]) | uint32(br[1])<<8 | uint32(br[2])<<16 | uint32(br[3])<<24
 }
 
 func (br byteReader) Uint64(i int) uint64 {
-	return uint64(br[i]) | uint64(br[i+1])<<8 | uint64(br[i+2])<<16 | uint64(br[i+3])<<24 |
-		uint64(br[i+4])<<32 | uint64(br[i+5])<<40 | uint64(br[i+6])<<48 | uint64(br[i+7])<<56
+	br = br[i : i+8]
+	return uint64(br[0]) | uint64(br[1])<<8 | uint64(br[2])<<16 | uint64(br[3])<<24 |
+		uint64(br[4])<<32 | uint64(br[5])<<40 | uint64(br[6])<<48 | uint64(br[7])<<56
 }
 
 func (br byteReader) Byte(i int) byte {
