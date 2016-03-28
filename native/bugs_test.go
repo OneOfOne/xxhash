@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	cxhash "github.com/OneOfOne/xxhash"
+	cxx "github.com/OneOfOne/xxhash"
 )
 
 func TestReset64(t *testing.T) {
@@ -75,7 +75,7 @@ func TestDataLen(t *testing.T) {
 }
 
 func testEquality(t *testing.T, v []byte) {
-	ch64, ch32 := cxhash.Checksum64(v), cxhash.Checksum32(v)
+	ch64, ch32 := cxx.Checksum64(v), cxx.Checksum32(v)
 
 	if h := Checksum64(v); ch64 != h {
 		t.Fatalf("Checksum64 doesn't match, len = %d, expected 0x%X, got 0x%X", len(v), ch64, h)

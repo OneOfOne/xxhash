@@ -2,4 +2,4 @@
 
 package xxhash
 
-const IsBigEndian = true
+const isBigEndian = true

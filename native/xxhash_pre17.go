@@ -1,22 +1,167 @@
+// +build !go1.7
+
 package xxhash
 
-import (
-	"errors"
-	"hash"
-)
+// Checksum32S returns the checksum of the input bytes with the specific seed.
+func Checksum32S(in []byte, seed uint32) (h uint32) {
+	i, l := 0, len(in)
+	br := newbyteReader(in)
+	if l >= 16 {
+		var (
+			v1 = seed + prime32x1 + prime32x2
+			v2 = seed + prime32x2
+			v3 = seed + 0
+			v4 = seed - prime32x1
+		)
+		for ; i <= l-16; i += 16 {
+			v1 += br.Uint32(i) * prime32x2
+			v1 = rotl32_13(v1)
+			v1 *= prime32x1
 
-const (
-	prime64x1 = 11400714785074694791
-	prime64x2 = 14029467366897019727
-	prime64x3 = 1609587929392839161
-	prime64x4 = 9650029242287828579
-	prime64x5 = 2870177450012600261
-)
+			v2 += br.Uint32(i+4) * prime32x2
+			v2 = rotl32_13(v2)
+			v2 *= prime32x1
 
-var (
-	LenErr = errors.New("len(in) - i > 32")
-	CapErr = errors.New("cap(xx.mem) > 32")
-)
+			v3 += br.Uint32(i+8) * prime32x2
+			v3 = rotl32_13(v3)
+			v3 *= prime32x1
+
+			v4 += br.Uint32(i+12) * prime32x2
+			v4 = rotl32_13(v4)
+			v4 *= prime32x1
+		}
+
+		h = rotl32_1(v1) + rotl32_7(v2) + rotl32_12(v3) + rotl32_18(v4)
+
+	} else {
+		h = seed + prime32x5
+	}
+
+	h += uint32(l)
+	for ; i <= l-4; i += 4 {
+		h += br.Uint32(i) * prime32x3
+		h = rotl32_17(h) * prime32x4
+	}
+
+	for ; i < l; i++ {
+		h += uint32(br.Byte(i)) * prime32x5
+		h = rotl32_11(h) * prime32x1
+	}
+
+	h ^= h >> 15
+	h *= prime32x2
+	h ^= h >> 13
+	h *= prime32x3
+	h ^= h >> 16
+
+	return
+}
+
+func (xx *XXHash32) Write(in []byte) (n int, err error) {
+	i, l, ml := 0, len(in), len(xx.mem)
+	xx.ln += uint64(l)
+
+	if d := 16 - ml; ml > 0 && ml+l > 16 {
+		xx.mem = append(xx.mem, in[:d]...)
+		in = in[d:]
+		ml, l = 16, len(in)
+	} else if ml+l < 16 {
+		xx.mem = append(xx.mem, in...)
+		return l, nil
+	}
+
+	if ml > 0 {
+		i += 16 - ml
+		br := newbyteReader(xx.mem)
+		xx.mem = append(xx.mem, in[:i]...)
+
+		xx.v1 += br.Uint32(i) * prime32x2
+		xx.v1 = rotl32_13(xx.v1)
+		xx.v1 *= prime32x1
+
+		xx.v2 += br.Uint32(i+4) * prime32x2
+		xx.v2 = rotl32_13(xx.v2)
+		xx.v2 *= prime32x1
+
+		xx.v3 += br.Uint32(i+8) * prime32x2
+		xx.v3 = rotl32_13(xx.v3)
+		xx.v3 *= prime32x1
+
+		xx.v4 += br.Uint32(i+12) * prime32x2
+		xx.v4 = rotl32_13(xx.v4)
+		xx.v4 *= prime32x1
+
+		xx.mem = xx.mem[:0]
+	}
+	br := newbyteReader(in)
+	if l >= 16 {
+		for ; i <= l-16; i += 16 {
+			xx.v1 += br.Uint32(i) * prime32x2
+			xx.v1 = rotl32_13(xx.v1)
+			xx.v1 *= prime32x1
+
+			xx.v2 += br.Uint32(i+4) * prime32x2
+			xx.v2 = rotl32_13(xx.v2)
+			xx.v2 *= prime32x1
+
+			xx.v3 += br.Uint32(i+8) * prime32x2
+			xx.v3 = rotl32_13(xx.v3)
+			xx.v3 *= prime32x1
+
+			xx.v4 += br.Uint32(i+12) * prime32x2
+			xx.v4 = rotl32_13(xx.v4)
+			xx.v4 *= prime32x1
+		}
+
+	}
+
+	if l-i != 0 {
+		xx.mem = append(xx.mem, in[i:]...)
+	}
+
+	if debug {
+		if l-i > 16 {
+			panic("len(in) - i > 16")
+		}
+
+		if cap(xx.mem) > 16 {
+			panic("cap(xx.mem) > 16")
+		}
+	}
+
+	return l, nil
+}
+
+func (xx *XXHash32) Sum32() (h uint32) {
+	i, l := 0, len(xx.mem)
+	if xx.ln >= 16 {
+		h = rotl32_1(xx.v1) + rotl32_7(xx.v2) + rotl32_12(xx.v3) + rotl32_18(xx.v4)
+	} else {
+		h = xx.seed + prime32x5
+	}
+
+	h += uint32(xx.ln)
+
+	if len(xx.mem) > 0 {
+		br := newbyteReader(xx.mem)
+		for ; i <= l-4; i += 4 {
+			h += br.Uint32(i) * prime32x3
+			h = rotl32_17(h) * prime32x4
+		}
+
+		for ; i < l; i++ {
+			h += uint32(br.Byte(i)) * prime32x5
+			h = rotl32_11(h) * prime32x1
+		}
+	}
+	h ^= h >> 15
+	h *= prime32x2
+	h ^= h >> 13
+	h *= prime32x3
+	h ^= h >> 16
+
+	return
+}
 
 // Checksum64S returns the 64bit xxhash checksum for a single input
 func Checksum64S(in []byte, seed uint64) (h uint64) {
@@ -101,64 +246,6 @@ func Checksum64S(in []byte, seed uint64) (h uint64) {
 	return h
 }
 
-// Checksum64 an alias for Checksum64S(in, 0)
-func Checksum64(in []byte) uint64 {
-	return Checksum64S(in, 0)
-}
-
-// ChecksumString64 returns the checksum of the input data, without creating a copy, with the seed set to 0.
-func ChecksumString64(s string) uint64 {
-	return ChecksumString64S(s, 0)
-}
-
-type XXHash64 struct {
-	ln                   uint64
-	seed, v1, v2, v3, v4 uint64
-	mem                  []byte
-}
-
-var _ interface {
-	hash.Hash64
-	WriteString(string) (int, error)
-} = (*XXHash64)(nil)
-
-// Size returns the number of bytes Sum will return.
-func (xx *XXHash64) Size() int {
-	return 8
-}
-
-// BlockSize returns the hash's underlying block size.
-// The Write method must be able to accept any amount
-// of data, but it may operate more efficiently if all writes
-// are a multiple of the block size.
-func (xx *XXHash64) BlockSize() int {
-	return 32
-}
-
-// NewS64 creates a new hash.Hash64 computing the 64bit xxHash checksum starting with the specific seed.
-func NewS64(seed uint64) (xx *XXHash64) {
-	xx = &XXHash64{
-		seed: seed,
-		mem:  make([]byte, 32),
-	}
-	xx.Reset()
-	return
-}
-
-// New64 creates a new hash.Hash64 computing the 64bit xxHash checksum starting with the seed set to 0x0.
-func New64() *XXHash64 {
-	return NewS64(0)
-}
-
-func (xx *XXHash64) Reset() {
-	xx.v1 = xx.seed + prime64x1 + prime64x2
-	xx.v2 = xx.seed + prime64x2
-	xx.v3 = xx.seed
-	xx.v4 = xx.seed - prime64x1
-	xx.ln = 0
-	xx.mem = xx.mem[:0]
-}
-
 func (xx *XXHash64) Write(in []byte) (n int, err error) {
 	i, l, ml := 0, len(in), len(xx.mem)
 	xx.ln += uint64(l)
@@ -220,18 +307,17 @@ func (xx *XXHash64) Write(in []byte) (n int, err error) {
 		xx.mem = append(xx.mem, in[i:]...)
 	}
 
-	if l-i > 32 {
-		return 0, LenErr
+	if debug {
+		if l-i > 32 {
+			panic("len(in) - i > 32")
+		}
+
+		if cap(xx.mem) > 32 {
+			panic("cap(xx.mem) > 32")
+		}
 	}
 
-	if cap(xx.mem) > 32 {
-		return 0, CapErr
-	}
 	return l, nil
-}
-
-func (xx *XXHash64) WriteString(s string) (int, error) {
-	return writeString(xx, s)
 }
 
 func (xx *XXHash64) Sum64() (h uint64) {
@@ -297,33 +383,3 @@ func (xx *XXHash64) Sum64() (h uint64) {
 
 	return
 }
-
-// Sum appends the current hash to b and returns the resulting slice.
-// It does not change the underlying hash state.
-func (xx *XXHash64) Sum(in []byte) []byte {
-	s := xx.Sum64()
-	return append(in, byte(s>>56), byte(s>>48), byte(s>>40), byte(s>>32), byte(s>>24), byte(s>>16), byte(s>>8), byte(s))
-}
-
-func swap32(x uint32) uint32 {
-	return ((x << 24) & 0xff000000) |
-		((x << 8) & 0x00ff0000) |
-		((x >> 8) & 0x0000ff00) |
-		((x >> 24) & 0x000000ff)
-}
-
-func swap64(x uint64) uint64 {
-	x = (0xff00ff00ff00ff & (x >> 8)) | ((0xff00ff00ff00ff & x) << 8)
-	x = (0xffff0000ffff & (x >> 16)) | ((0xffff0000ffff & x) << 16)
-	return (0xffffffff & (x >> 32)) | ((0xffffffff & x) << 32)
-}
-
-// force the compiler to use ROTL instructions
-func rotl64_1(x uint64) uint64  { return (x << 1) | (x >> (64 - 1)) }
-func rotl64_7(x uint64) uint64  { return (x << 7) | (x >> (64 - 7)) }
-func rotl64_11(x uint64) uint64 { return (x << 11) | (x >> (64 - 11)) }
-func rotl64_12(x uint64) uint64 { return (x << 12) | (x >> (64 - 12)) }
-func rotl64_18(x uint64) uint64 { return (x << 18) | (x >> (64 - 18)) }
-func rotl64_23(x uint64) uint64 { return (x << 23) | (x >> (64 - 23)) }
-func rotl64_27(x uint64) uint64 { return (x << 27) | (x >> (64 - 27)) }
-func rotl64_31(x uint64) uint64 { return (x << 31) | (x >> (64 - 31)) }

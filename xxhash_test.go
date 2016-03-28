@@ -30,7 +30,6 @@ const (
 func Test(t *testing.T) {
 	t.Logf("CGO version's backend: %s", CGO.Backend)
 	t.Logf("Native version's backend: %s", N.Backend)
-	t.Logf("Native is big endian: %v", N.IsBigEndian)
 	t.Logf("Benchmark string len: %d", len(inS))
 }
 
