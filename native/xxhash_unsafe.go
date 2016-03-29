@@ -17,10 +17,13 @@ type byteReader struct {
 }
 
 func newbyteReader(b []byte) byteReader {
+	if len(b) == 0 {
+		return byteReader{}
+	}
 	return byteReader{unsafe.Pointer(&b[0])}
 }
 
-func (br byteReader) Uint32(i int) uint32 {
+func (br byteReader) Uint32(i int32) uint32 {
 	u := *(*uint32)(unsafe.Pointer(uintptr(br.p) + uintptr(i)))
 	if isBigEndian {
 		u = swap32(u)
@@ -28,7 +31,7 @@ func (br byteReader) Uint32(i int) uint32 {
 	return u
 }
 
-func (br byteReader) Uint64(i int) uint64 {
+func (br byteReader) Uint64(i int32) uint64 {
 	u := *(*uint64)(unsafe.Pointer(uintptr(br.p) + uintptr(i)))
 	if isBigEndian {
 		u = swap64(u)
@@ -36,7 +39,7 @@ func (br byteReader) Uint64(i int) uint64 {
 	return u
 }
 
-func (br byteReader) Byte(i int) byte {
+func (br byteReader) Byte(i int32) byte {
 	return *(*byte)(unsafe.Pointer(uintptr(br.p) + uintptr(i)))
 }
 

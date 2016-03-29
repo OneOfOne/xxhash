@@ -13,18 +13,18 @@ func newbyteReader(in []byte) byteReader {
 	return byteReader(in)
 }
 
-func (br byteReader) Uint32(i int) uint32 {
+func (br byteReader) Uint32(i int32) uint32 {
 	br = br[i : i+4 : len(br)]
 	return uint32(br[0]) | uint32(br[1])<<8 | uint32(br[2])<<16 | uint32(br[3])<<24
 }
 
-func (br byteReader) Uint64(i int) uint64 {
+func (br byteReader) Uint64(i int32) uint64 {
 	br = br[i : i+8 : len(br)]
 	return uint64(br[0]) | uint64(br[1])<<8 | uint64(br[2])<<16 | uint64(br[3])<<24 |
 		uint64(br[4])<<32 | uint64(br[5])<<40 | uint64(br[6])<<48 | uint64(br[7])<<56
 }
 
-func (br byteReader) Byte(i int) byte {
+func (br byteReader) Byte(i int32) byte {
 	return br[i]
 }
 

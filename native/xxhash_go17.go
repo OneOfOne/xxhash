@@ -57,23 +57,22 @@ func Checksum32S(in []byte, seed uint32) (h uint32) {
 }
 
 func (xx *XXHash32) Write(in []byte) (n int, err error) {
-	i, l, ml := 0, len(in), len(xx.mem)
-	xx.ln += uint64(l)
+	i, l, ml := int32(0), int32(len(in)), xx.memIdx
+	xx.ln += int32(l)
 
 	if d := 16 - ml; ml > 0 && ml+l > 16 {
-		xx.mem = append(xx.mem, in[:d]...)
+		xx.memIdx += int32(copy(xx.mem[xx.memIdx:], in[:d]))
 		in = in[d:]
-		ml, l = 16, len(in)
+		ml, l = 16, int32(len(in))
 	} else if ml+l < 16 {
-		xx.mem = append(xx.mem, in...)
-		return l, nil
+		xx.memIdx += int32(copy(xx.mem[xx.memIdx:], in))
+		return int(l), nil
 	}
 
 	if ml > 0 {
 		i += 16 - ml
-
-		xx.mem = append(xx.mem, in[:i]...)
-		in := xx.mem
+		xx.memIdx += int32(copy(xx.mem[xx.memIdx:], in))
+		in := xx.mem[:16]
 
 		xx.v1 += (uint32(in[0]) | uint32(in[1])<<8 | uint32(in[2])<<16 | uint32(in[3])<<24) * prime32x2
 		xx.v1 = rotl32_13(xx.v1) * prime32x1
@@ -87,7 +86,7 @@ func (xx *XXHash32) Write(in []byte) (n int, err error) {
 		xx.v4 += (uint32(in[12]) | uint32(in[13])<<8 | uint32(in[14])<<16 | uint32(in[15])<<24) * prime32x2
 		xx.v4 = rotl32_13(xx.v4) * prime32x1
 
-		xx.mem = xx.mem[:0]
+		xx.memIdx = 0
 	}
 
 	if l >= 16 {
@@ -108,7 +107,7 @@ func (xx *XXHash32) Write(in []byte) (n int, err error) {
 	}
 
 	if l-i != 0 {
-		xx.mem = append(xx.mem, in[i:]...)
+		xx.memIdx += int32(copy(xx.mem[xx.memIdx:], in[i:]))
 	}
 
 	if debug {
@@ -121,11 +120,11 @@ func (xx *XXHash32) Write(in []byte) (n int, err error) {
 		}
 	}
 
-	return l, nil
+	return int(l), nil
 }
 
 func (xx *XXHash32) Sum32() (h uint32) {
-	i, l := 0, len(xx.mem)
+	i, l := int32(0), xx.memIdx
 	if xx.ln >= 16 {
 		h = rotl32_1(xx.v1) + rotl32_7(xx.v2) + rotl32_12(xx.v3) + rotl32_18(xx.v4)
 	} else {
@@ -134,14 +133,14 @@ func (xx *XXHash32) Sum32() (h uint32) {
 
 	h += uint32(xx.ln)
 
-	if len(xx.mem) > 0 {
-		for ; i <= l-4; i += 4 {
+	if xx.memIdx > 0 {
+		for ; i <= xx.memIdx-4; i += 4 {
 			in := xx.mem[i : i+4 : l]
 			h += (uint32(in[0]) | uint32(in[1])<<8 | uint32(in[2])<<16 | uint32(in[3])<<24) * prime32x3
 			h = rotl32_17(h) * prime32x4
 		}
 
-		for ; i < l; i++ {
+		for ; i < xx.memIdx; i++ {
 			h += uint32(xx.mem[i]) * prime32x5
 			h = rotl32_11(h) * prime32x1
 		}
@@ -155,6 +154,7 @@ func (xx *XXHash32) Sum32() (h uint32) {
 	return
 }
 
+// Checksum64S returns the 64bit xxhash checksum for a single input
 func Checksum64S(in []byte, seed uint64) (h uint64) {
 	i, l := 0, len(in)
 	if l >= 32 {
@@ -225,35 +225,15 @@ func Checksum64S(in []byte, seed uint64) (h uint64) {
 		h = rotl64_27(h)*prime64x1 + prime64x4
 	}
 
-	if i <= l-4 {
+	for ; i <= l-4; i += 4 {
 		in := in[i : i+4 : l]
 		h ^= (uint64(in[0]) | uint64(in[1])<<8 | uint64(in[2])<<16 | uint64(in[3])<<24) * prime64x1
 		h = rotl64_23(h)*prime64x2 + prime64x3
-		i += 4
 	}
 
-	switch l - i {
-	case 3:
-		in = in[i : i+3 : l]
-		h ^= uint64(in[0]) * prime64x5
+	for ; i < l; i++ {
+		h ^= uint64(in[i]) * prime64x5
 		h = rotl64_11(h) * prime64x1
-
-		h ^= uint64(in[1]) * prime64x5
-		h = rotl64_11(h) * prime64x1
-
-		h ^= uint64(in[2]) * prime64x5
-		h = rotl64_11(h) * prime64x1
-	case 2:
-		in = in[i : i+2 : l]
-		h ^= uint64(in[0]) * prime64x5
-		h = rotl64_11(h) * prime64x1
-
-		h ^= uint64(in[1]) * prime64x5
-		h = rotl64_11(h) * prime64x1
-	case 1:
-		h ^= uint64(in[0]) * prime64x5
-		h = rotl64_11(h) * prime64x1
-
 	}
 
 	h ^= h >> 33
@@ -266,21 +246,22 @@ func Checksum64S(in []byte, seed uint64) (h uint64) {
 }
 
 func (xx *XXHash64) Write(in []byte) (n int, err error) {
-	i, l, ml := 0, len(in), len(xx.mem)
-	xx.ln += uint64(l)
+	var i, l, ml int32 = int32(0), int32(len(in)), xx.memIdx
+	xx.ln += int32(l)
 	if d := 32 - ml; ml > 0 && ml+l > 32 {
-		xx.mem = append(xx.mem, in[:d]...)
+		xx.memIdx += int32(copy(xx.mem[xx.memIdx:], in[:d]))
 		in = in[d:]
-		ml, l = 32, len(in)
+		ml, l = 32, int32(len(in))
 	} else if ml+l < 32 {
-		xx.mem = append(xx.mem, in...)
-		return l, nil
+		xx.memIdx += int32(copy(xx.mem[xx.memIdx:], in))
+		return int(l), nil
 	}
 
 	if ml > 0 {
 		i += 32 - ml
-		xx.mem = append(xx.mem, in[:i]...)
-		in := xx.mem
+		xx.memIdx += int32(copy(xx.mem[xx.memIdx:], in))
+		in := xx.mem[:]
+
 		xx.v1 += (uint64(in[0]) | uint64(in[1])<<8 | uint64(in[2])<<16 | uint64(in[3])<<24 |
 			uint64(in[4])<<32 | uint64(in[5])<<40 | uint64(in[6])<<48 | uint64(in[7])<<56) * prime64x2
 		xx.v1 = rotl64_31(xx.v1) * prime64x1
@@ -296,8 +277,10 @@ func (xx *XXHash64) Write(in []byte) (n int, err error) {
 		xx.v4 += (uint64(in[24]) | uint64(in[25])<<8 | uint64(in[26])<<16 | uint64(in[27])<<24 |
 			uint64(in[28])<<32 | uint64(in[29])<<40 | uint64(in[30])<<48 | uint64(in[31])<<56) * prime64x2
 		xx.v4 = rotl64_31(xx.v4) * prime64x1
-		xx.mem = xx.mem[:0]
+
+		xx.memIdx = 0
 	}
+
 	if l >= 32 {
 		for ; i <= l-32; i += 32 {
 			in := in[i : i+32 : l]
@@ -321,23 +304,19 @@ func (xx *XXHash64) Write(in []byte) (n int, err error) {
 	}
 
 	if l-i != 0 {
-		xx.mem = append(xx.mem, in[i:]...)
+		xx.memIdx += int32(copy(xx.mem[xx.memIdx:], in[i:]))
 	}
 
 	if debug {
 		if l-i > 32 {
 			panic("len(in) - i > 32")
 		}
-
-		if cap(xx.mem) > 32 {
-			panic("cap(xx.mem) > 32")
-		}
 	}
-	return l, nil
+	return int(l), nil
 }
 
 func (xx *XXHash64) Sum64() (h uint64) {
-	i, l := 0, len(xx.mem)
+	var i int32
 	v1, v2, v3, v4 := xx.v1, xx.v2, xx.v3, xx.v4
 	if xx.ln >= 32 {
 		h = rotl64_1(v1) + rotl64_7(v2) + rotl64_12(v3) + rotl64_18(v4)
@@ -369,11 +348,11 @@ func (xx *XXHash64) Sum64() (h uint64) {
 		h = xx.seed + prime64x5
 	}
 
-	h += xx.ln
-	if len(xx.mem) > 0 {
-		in := xx.mem
-		for ; i <= l-8; i += 8 {
-			in := in[i : i+8 : l]
+	h += uint64(xx.ln)
+	if xx.memIdx > 0 {
+		in := xx.mem[:xx.memIdx]
+		for ; i <= xx.memIdx-8; i += 8 {
+			in := in[i : i+8 : 32]
 			k := (uint64(in[0]) | uint64(in[1])<<8 | uint64(in[2])<<16 | uint64(in[3])<<24 |
 				uint64(in[4])<<32 | uint64(in[5])<<40 | uint64(in[6])<<48 | uint64(in[7])<<56)
 			k *= prime64x2
@@ -383,36 +362,17 @@ func (xx *XXHash64) Sum64() (h uint64) {
 			h = rotl64_27(h)*prime64x1 + prime64x4
 		}
 
-		if i <= l-4 {
-			in := in[i : i+4 : l]
+		for ; i <= xx.memIdx-4; i += 4 {
+			in := in[i : i+4 : 32]
 			h ^= (uint64(in[0]) | uint64(in[1])<<8 | uint64(in[2])<<16 | uint64(in[3])<<24) * prime64x1
 			h = rotl64_23(h)*prime64x2 + prime64x3
-			i += 4
 		}
 
-		switch l - i {
-		case 3:
-			in = in[i : i+3 : l]
-			h ^= uint64(in[0]) * prime64x5
+		for ; i < xx.memIdx; i++ {
+			h ^= uint64(in[i]) * prime64x5
 			h = rotl64_11(h) * prime64x1
-
-			h ^= uint64(in[1]) * prime64x5
-			h = rotl64_11(h) * prime64x1
-
-			h ^= uint64(in[2]) * prime64x5
-			h = rotl64_11(h) * prime64x1
-		case 2:
-			in = in[i : i+2 : l]
-			h ^= uint64(in[0]) * prime64x5
-			h = rotl64_11(h) * prime64x1
-
-			h ^= uint64(in[1]) * prime64x5
-			h = rotl64_11(h) * prime64x1
-		case 1:
-			h ^= uint64(in[0]) * prime64x5
-			h = rotl64_11(h) * prime64x1
-
 		}
+		xx.memIdx = 0
 	}
 	h ^= h >> 33
 	h *= prime64x2

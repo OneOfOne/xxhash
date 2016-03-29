@@ -2,7 +2,12 @@ package xxhash
 
 import (
 	"bytes"
+	"math/rand"
+	"reflect"
 	"testing"
+	"time"
+
+	"testing/quick"
 
 	cxx "github.com/OneOfOne/xxhash"
 )
@@ -97,5 +102,28 @@ func testEquality(t *testing.T, v []byte) {
 
 	if h := h32.Sum32(); ch32 != h {
 		t.Fatalf("Sum32() doesn't match, len = %d, expected 0x%X, got 0x%X", len(v), ch32, h)
+	}
+}
+
+func TestHulkSmash(t *testing.T) {
+	const N = 10000
+	rnd, typ := rand.New(rand.NewSource(time.Now().UnixNano())), reflect.TypeOf([]byte(nil))
+	for i := 0; i < N; i++ {
+		v, ok := quick.Value(typ, rnd)
+		if !ok {
+			t.Fatal("!ok")
+		}
+		vb := v.Bytes()
+		seed := uint64(rnd.Int63())
+		x64 := NewS64(seed)
+		x64.Write(vb)
+		if s1, s2 := x64.Sum64(), Checksum64S(vb, seed); s1 != s2 {
+			t.Fatalf("len(v) = %d: %d != %d, should be %d", len(vb), s1, s2, cxx.Checksum64S(vb, seed))
+		}
+		x32 := NewS32(uint32(seed))
+		x32.Write(vb)
+		if s1, s2 := x32.Sum32(), Checksum32S(vb, uint32(seed)); s1 != s2 {
+			t.Fatalf("len(v) = %d: %d != %d, should be %d", len(vb), s1, s2, cxx.Checksum32S(vb, uint32(seed)))
+		}
 	}
 }

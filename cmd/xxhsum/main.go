@@ -40,7 +40,7 @@ func main() {
 	if len(args) == 0 {
 		flag.Usage()
 	}
-	sema := NewSema(runtime.NumCPU())
+	sema := newSema(runtime.NumCPU())
 	var wg sync.WaitGroup
 	wg.Add(len(args))
 	if !*checkArg {
@@ -53,7 +53,7 @@ func main() {
 	}
 	for _, fn := range args {
 		if *checkArg {
-			check(NewSema(runtime.NumCPU()), fn)
+			check(newSema(runtime.NumCPU()), fn)
 		} else {
 			sema.Run(func() { printHash(fn) })
 		}
@@ -64,7 +64,7 @@ func main() {
 	}
 }
 
-func check(sema *Sema, fn string) {
+func check(sema *sema, fn string) {
 	defer sema.WaitAndClose()
 	var err error
 	var f *os.File

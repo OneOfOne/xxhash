@@ -2,13 +2,13 @@ package main
 
 import "sync"
 
-type Sema struct {
+type sema struct {
 	wg sync.WaitGroup
 	ch chan func()
 }
 
-func NewSema(n int) *Sema {
-	s := &Sema{
+func newSema(n int) *sema {
+	s := &sema{
 		ch: make(chan func(), n),
 	}
 	for ; n > 0; n-- {
@@ -17,19 +17,19 @@ func NewSema(n int) *Sema {
 	return s
 }
 
-func (s *Sema) handler() {
+func (s *sema) handler() {
 	for fn := range s.ch {
 		fn()
 		s.wg.Done()
 	}
 }
 
-func (s *Sema) Run(fn func()) {
+func (s *sema) Run(fn func()) {
 	s.wg.Add(1)
 	s.ch <- fn
 }
 
-func (s *Sema) WaitAndClose() {
+func (s *sema) WaitAndClose() {
 	s.wg.Wait()
 	close(s.ch)
 	s.ch = nil

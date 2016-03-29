@@ -220,19 +220,19 @@ func BenchmarkXXChecksum64Short(b *testing.B) {
 	}
 }
 
-func BenchmarkXXChecksumString64Short(b *testing.B) {
-	var bv uint64
-	k := "Test-key-100"
-	for i := 0; i < b.N; i++ {
-		bv += N.ChecksumString64(k)
-	}
-}
-
 func BenchmarkXXChecksum64ShortCgo(b *testing.B) {
 	var bv uint64
 	k := []byte("Test-key-100")
 	for i := 0; i < b.N; i++ {
 		bv += CGO.Checksum64(k)
+	}
+}
+
+func BenchmarkXXChecksumString64Short(b *testing.B) {
+	var bv uint64
+	k := "Test-key-100"
+	for i := 0; i < b.N; i++ {
+		bv += N.ChecksumString64(k)
 	}
 }
 

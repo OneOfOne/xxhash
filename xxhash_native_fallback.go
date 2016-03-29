@@ -1,4 +1,5 @@
 // +build go1.7 !cgo
+// +build !forcecgo
 
 package xxhash
 
@@ -28,7 +29,7 @@ func Checksum64(in []byte) uint64 { return N.Checksum64S(in, 0x0) }
 // ChecksumString64S returns the checksum of the input data with the specific seed.
 func ChecksumString64S(in string, seed uint64) uint64 { return N.ChecksumString64S(in, seed) }
 
-// Checksum64 returns the checksum of the input data with the seed set to 0
+// ChecksumString64 returns the checksum of the input data with the seed set to 0
 func ChecksumString64(in string) uint64 { return N.ChecksumString64(in) }
 
 // Checksum32S returns the checksum of the input data with the specific seed.

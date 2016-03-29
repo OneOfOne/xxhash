@@ -29,9 +29,10 @@ func ChecksumString32(s string) uint32 {
 }
 
 type XXHash32 struct {
-	ln                   uint64
-	seed, v1, v2, v3, v4 uint32
-	mem                  []byte
+	mem            [16]byte
+	ln, memIdx     int32
+	v1, v2, v3, v4 uint32
+	seed           uint32
 }
 
 var _ interface {
@@ -56,7 +57,6 @@ func (xx *XXHash32) BlockSize() int {
 func NewS32(seed uint32) (xx *XXHash32) {
 	xx = &XXHash32{
 		seed: seed,
-		mem:  make([]byte, 16),
 	}
 	xx.Reset()
 	return
@@ -72,8 +72,7 @@ func (xx *XXHash32) Reset() {
 	xx.v2 = xx.seed + prime32x2
 	xx.v3 = xx.seed
 	xx.v4 = xx.seed - prime32x1
-	xx.ln = 0
-	xx.mem = xx.mem[:0]
+	xx.ln, xx.memIdx = 0, 0
 }
 
 func (xx *XXHash32) WriteString(s string) (int, error) {
@@ -98,9 +97,10 @@ func ChecksumString64(s string) uint64 {
 }
 
 type XXHash64 struct {
-	ln                   uint64
-	seed, v1, v2, v3, v4 uint64
-	mem                  []byte
+	mem            [32]byte
+	v1, v2, v3, v4 uint64
+	seed           uint64
+	ln, memIdx     int32
 }
 
 var _ interface {
@@ -125,7 +125,6 @@ func (xx *XXHash64) BlockSize() int {
 func NewS64(seed uint64) (xx *XXHash64) {
 	xx = &XXHash64{
 		seed: seed,
-		mem:  make([]byte, 32),
 	}
 	xx.Reset()
 	return
@@ -141,8 +140,7 @@ func (xx *XXHash64) Reset() {
 	xx.v2 = xx.seed + prime64x2
 	xx.v3 = xx.seed
 	xx.v4 = xx.seed - prime64x1
-	xx.ln = 0
-	xx.mem = xx.mem[:0]
+	xx.ln, xx.memIdx = 0, 0
 }
 
 func (xx *XXHash64) WriteString(s string) (int, error) {
