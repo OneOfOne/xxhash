@@ -1,4 +1,4 @@
-// +build go1.7 appengine safe
+// +build go1.7 go1.7,appengine go1.7,safe
 
 package xxhash
 
