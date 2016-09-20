@@ -11,12 +11,10 @@ This is a CGO wrapper and a native Go implementation of the excellent [xxhash](h
 
 ## Features
 
-* On Go 1.7+ the pure go version is faster than CGO for all inputs, on < 1.7 it is still faster for short inputs.
+* On Go 1.7+ the pure go version is faster than CGO for all inputs.
 * Supports ChecksumString{32,64} xxhash{32,64}.WriteString, which uses no copies when it can, falls back to copy on appengine.
 * The native version falls back to a less optimized version on appengine due to the lack of unsafe.
-* Both the native version and the cgo version supports 64bit and 32bit versions of the algorithm.
-* When using the cgo version, it will automatically fallback to the native version if cgo isn't available or on go 1.7,
-you can check the `xxhash.Backend` const.
+
 
 ## Benchmark
 ```

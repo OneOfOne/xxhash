@@ -1,8 +1,4 @@
-// +build go1.7 go1.7,appengine go1.7,safe
-
 package xxhash
-
-//const Backend = "GoSafe17"
 
 func u32(in []byte) uint32 {
 	return uint32(in[0]) | uint32(in[1])<<8 | uint32(in[2])<<16 | uint32(in[3])<<24

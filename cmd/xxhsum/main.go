@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/OneOfOne/xxhash/native"
+	"github.com/OneOfOne/xxhash"
 )
 
 var (

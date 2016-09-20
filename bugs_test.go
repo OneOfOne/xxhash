@@ -1,3 +1,5 @@
+// +build ignore
+
 package xxhash_test
 
 import (
@@ -9,8 +11,7 @@ import (
 
 	"testing/quick"
 
-	cxx "github.com/OneOfOne/xxhash"
-	N "github.com/OneOfOne/xxhash/native"
+	N "github.com/OneOfOne/xxhash"
 )
 
 func TestReset64(t *testing.T) {
