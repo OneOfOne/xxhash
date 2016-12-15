@@ -63,6 +63,15 @@ func TestHash64Short(t *testing.T) {
 	}
 }
 
+func TestWriteStringNil(t *testing.T) {
+	h32, h64 := N.New32(), N.New64()
+	for i := 0; i < 1e6; i++ {
+		h32.WriteString("")
+		h64.WriteString("")
+	}
+	_, _ = h32.Sum32(), h64.Sum64()
+}
+
 func BenchmarkXXChecksum32(b *testing.B) {
 	var bv uint32
 	for i := 0; i < b.N; i++ {

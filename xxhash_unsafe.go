@@ -25,6 +25,9 @@ func ChecksumString64S(s string, seed uint64) uint64 {
 }
 
 func writeString(w io.Writer, s string) (int, error) {
+	if len(s) == 0 {
+		return w.Write(nil)
+	}
 	ss := (*reflect.StringHeader)(unsafe.Pointer(&s))
 	return w.Write((*[0x7fffffff]byte)(unsafe.Pointer(ss.Data))[:len(s):len(s)])
 }
