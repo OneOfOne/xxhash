@@ -235,7 +235,7 @@ func Checksum64S(in []byte, seed uint64) (h uint64) {
 func (xx *XXHash64) Write(in []byte) (n int, err error) {
 	var i, ml = 0, int(xx.memIdx)
 	n = len(in)
-	xx.ln += int32(n)
+	xx.ln += uint64(n)
 	if d := 32 - ml; ml > 0 && ml+len(in) > 32 {
 		xx.memIdx += int32(copy(xx.mem[xx.memIdx:], in[:d:len(in)]))
 		ml, in = 32, in[d:len(in):len(in)]

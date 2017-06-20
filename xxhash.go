@@ -100,7 +100,8 @@ type XXHash64 struct {
 	mem            [32]byte
 	v1, v2, v3, v4 uint64
 	seed           uint64
-	ln, memIdx     int32
+	ln             uint64
+	memIdx         int32
 }
 
 var _ interface {
