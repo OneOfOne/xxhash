@@ -1,9 +1,7 @@
 package xxhash
 
-import "hash"
-
 const (
-	debug = true // set to true to debug len/cap errors
+	debug = false // set to true to debug len/cap errors
 
 	prime32x1 = 2654435761
 	prime32x2 = 2246822519
@@ -34,11 +32,6 @@ type XXHash32 struct {
 	v1, v2, v3, v4 uint32
 	seed           uint32
 }
-
-var _ interface {
-	hash.Hash32
-	WriteString(string) (int, error)
-} = (*XXHash32)(nil)
 
 // Size returns the number of bytes Sum will return.
 func (xx *XXHash32) Size() int {
@@ -103,11 +96,6 @@ type XXHash64 struct {
 	ln             uint64
 	memIdx         int32
 }
-
-var _ interface {
-	hash.Hash64
-	WriteString(string) (int, error)
-} = (*XXHash64)(nil)
 
 // Size returns the number of bytes Sum will return.
 func (xx *XXHash64) Size() int {

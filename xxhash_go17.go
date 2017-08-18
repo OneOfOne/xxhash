@@ -10,14 +10,15 @@ func u64(in []byte) uint64 {
 // Checksum32S returns the checksum of the input bytes with the specific seed.
 func Checksum32S(in []byte, seed uint32) (h uint32) {
 	var i int
-	if len(in) >= 16 {
+
+	if len(in) > 15 {
 		var (
 			v1 = seed + prime32x1 + prime32x2
 			v2 = seed + prime32x2
 			v3 = seed + 0
 			v4 = seed - prime32x1
 		)
-		for ; i <= len(in)-16; i += 16 {
+		for ; i < len(in)-15; i += 16 {
 			in := in[i : i+16 : len(in)]
 			v1 += u32(in[0:4:len(in)]) * prime32x2
 			v1 = rotl32_13(v1) * prime32x1
@@ -92,21 +93,19 @@ func (xx *XXHash32) Write(in []byte) (n int, err error) {
 		xx.memIdx = 0
 	}
 
-	if len(in) >= 16 {
-		for ; i <= len(in)-16; i += 16 {
-			in := in[i : i+16 : len(in)]
-			xx.v1 += u32(in[0:4:len(in)]) * prime32x2
-			xx.v1 = rotl32_13(xx.v1) * prime32x1
+	for ; i <= len(in)-16; i += 16 {
+		in := in[i : i+16 : len(in)]
+		xx.v1 += u32(in[0:4:len(in)]) * prime32x2
+		xx.v1 = rotl32_13(xx.v1) * prime32x1
 
-			xx.v2 += u32(in[4:8:len(in)]) * prime32x2
-			xx.v2 = rotl32_13(xx.v2) * prime32x1
+		xx.v2 += u32(in[4:8:len(in)]) * prime32x2
+		xx.v2 = rotl32_13(xx.v2) * prime32x1
 
-			xx.v3 += u32(in[8:12:len(in)]) * prime32x2
-			xx.v3 = rotl32_13(xx.v3) * prime32x1
+		xx.v3 += u32(in[8:12:len(in)]) * prime32x2
+		xx.v3 = rotl32_13(xx.v3) * prime32x1
 
-			xx.v4 += u32(in[12:16:len(in)]) * prime32x2
-			xx.v4 = rotl32_13(xx.v4) * prime32x1
-		}
+		xx.v4 += u32(in[12:16:len(in)]) * prime32x2
+		xx.v4 = rotl32_13(xx.v4) * prime32x1
 	}
 
 	if len(in)-i != 0 {
@@ -118,7 +117,7 @@ func (xx *XXHash32) Write(in []byte) (n int, err error) {
 
 func (xx *XXHash32) Sum32() (h uint32) {
 	var i int32
-	if xx.ln >= 16 {
+	if xx.ln > 15 {
 		h = rotl32_1(xx.v1) + rotl32_7(xx.v2) + rotl32_12(xx.v3) + rotl32_18(xx.v4)
 	} else {
 		h = xx.seed + prime32x5
@@ -127,7 +126,7 @@ func (xx *XXHash32) Sum32() (h uint32) {
 	h += uint32(xx.ln)
 
 	if xx.memIdx > 0 {
-		for ; i <= xx.memIdx-4; i += 4 {
+		for ; i < xx.memIdx-3; i += 4 {
 			in := xx.mem[i : i+4 : len(xx.mem)]
 			h += u32(in[0:4:len(in)]) * prime32x3
 			h = rotl32_17(h) * prime32x4
@@ -150,14 +149,14 @@ func (xx *XXHash32) Sum32() (h uint32) {
 // Checksum64S returns the 64bit xxhash checksum for a single input
 func Checksum64S(in []byte, seed uint64) (h uint64) {
 	var i int
-	if len(in) >= 32 {
+	if len(in) > 31 {
 		var (
 			v1 = seed + prime64x1 + prime64x2
 			v2 = seed + prime64x2
 			v3 = seed + 0
 			v4 = seed - prime64x1
 		)
-		for ; i <= len(in)-32; i += 32 {
+		for ; i < len(in)-31; i += 32 {
 			in := in[i : i+32 : len(in)]
 			v1 += u64(in[0:8:len(in)]) * prime64x2
 			v1 = rotl64_31(v1) * prime64x1
@@ -202,7 +201,7 @@ func Checksum64S(in []byte, seed uint64) (h uint64) {
 
 	h += uint64(len(in))
 
-	for ; i <= len(in)-8; i += 8 {
+	for ; i < len(in)-7; i += 8 {
 		in := in[i : i+8 : len(in)]
 		k := u64(in[0:8:len(in)])
 		k *= prime64x2
@@ -212,7 +211,7 @@ func Checksum64S(in []byte, seed uint64) (h uint64) {
 		h = rotl64_27(h)*prime64x1 + prime64x4
 	}
 
-	for ; i <= len(in)-4; i += 4 {
+	for ; i < len(in)-3; i += 4 {
 		in := in[i : i+4 : len(in)]
 		h ^= uint64(u32(in[0:4:len(in)])) * prime64x1
 		h = rotl64_23(h)*prime64x2 + prime64x3
@@ -264,22 +263,19 @@ func (xx *XXHash64) Write(in []byte) (n int, err error) {
 		xx.memIdx = 0
 	}
 
-	if len(in) >= 32 {
-		for ; i <= len(in)-32; i += 32 {
-			in := in[i : i+32 : len(in)]
-			xx.v1 += u64(in[0:8:len(in)]) * prime64x2
-			xx.v1 = rotl64_31(xx.v1) * prime64x1
+	for ; i <= len(in)-32; i += 32 {
+		in := in[i : i+32 : len(in)]
+		xx.v1 += u64(in[0:8:len(in)]) * prime64x2
+		xx.v1 = rotl64_31(xx.v1) * prime64x1
 
-			xx.v2 += u64(in[8:16:len(in)]) * prime64x2
-			xx.v2 = rotl64_31(xx.v2) * prime64x1
+		xx.v2 += u64(in[8:16:len(in)]) * prime64x2
+		xx.v2 = rotl64_31(xx.v2) * prime64x1
 
-			xx.v3 += u64(in[16:24:len(in)]) * prime64x2
-			xx.v3 = rotl64_31(xx.v3) * prime64x1
+		xx.v3 += u64(in[16:24:len(in)]) * prime64x2
+		xx.v3 = rotl64_31(xx.v3) * prime64x1
 
-			xx.v4 += u64(in[24:32:len(in)]) * prime64x2
-			xx.v4 = rotl64_31(xx.v4) * prime64x1
-		}
-
+		xx.v4 += u64(in[24:32:len(in)]) * prime64x2
+		xx.v4 = rotl64_31(xx.v4) * prime64x1
 	}
 
 	if len(in)-i != 0 {
@@ -297,7 +293,7 @@ func (xx *XXHash64) Write(in []byte) (n int, err error) {
 func (xx *XXHash64) Sum64() (h uint64) {
 	var i int32
 	v1, v2, v3, v4 := xx.v1, xx.v2, xx.v3, xx.v4
-	if xx.ln >= 32 {
+	if xx.ln > 31 {
 		h = rotl64_1(v1) + rotl64_7(v2) + rotl64_12(v3) + rotl64_18(v4)
 
 		v1 *= prime64x2

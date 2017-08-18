@@ -16,5 +16,5 @@ func ChecksumString64S(s string, seed uint64) uint64 {
 }
 
 func writeString(w io.Writer, s string) (int, error) {
-	return w.Write([]byte(s))
+	return io.WriteString(w, s)
 }
