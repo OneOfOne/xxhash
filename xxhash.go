@@ -161,3 +161,21 @@ func rotl64_18(x uint64) uint64 { return (x << 18) | (x >> (64 - 18)) }
 func rotl64_23(x uint64) uint64 { return (x << 23) | (x >> (64 - 23)) }
 func rotl64_27(x uint64) uint64 { return (x << 27) | (x >> (64 - 27)) }
 func rotl64_31(x uint64) uint64 { return (x << 31) | (x >> (64 - 31)) }
+
+func mix64(h uint64) uint64 {
+	h ^= h >> 33
+	h *= prime64x2
+	h ^= h >> 29
+	h *= prime64x3
+	h ^= h >> 32
+	return h
+}
+
+func doVx64(h, v uint64) uint64 {
+	v *= prime64x2
+	v = rotl64_31(v)
+	v *= prime64x1
+	h ^= v
+	h = h*prime64x1 + prime64x4
+	return h
+}

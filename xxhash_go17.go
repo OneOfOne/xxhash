@@ -1,5 +1,7 @@
 package xxhash
 
+import "unsafe"
+
 func u32(in []byte) uint32 {
 	return uint32(in[0]) | uint32(in[1])<<8 | uint32(in[2])<<16 | uint32(in[3])<<24
 }
@@ -147,88 +149,54 @@ func (xx *XXHash32) Sum32() (h uint32) {
 }
 
 // Checksum64S returns the 64bit xxhash checksum for a single input
-func Checksum64S(in []byte, seed uint64) (h uint64) {
-	var i int
+func Checksum64S(in []byte, seed uint64) uint64 {
 	if len(in) > 31 {
+		return checksum64S(in, seed)
+	}
+
+	var (
+		h = seed + prime64x5 + uint64(len(in))
+
+		i int
+	)
+
+	if len(in) > 7 {
 		var (
-			v1 = seed + prime64x1 + prime64x2
-			v2 = seed + prime64x2
-			v3 = seed + 0
-			v4 = seed - prime64x1
+			wordsLen = int(uint32(len(in)) >> 3)
+			words    = (*(*[]uint64)(unsafe.Pointer(&in)))[:wordsLen:wordsLen]
 		)
-		for ; i < len(in)-31; i += 32 {
-			in := in[i : i+32 : len(in)]
-			v1 += u64(in[0:8:len(in)]) * prime64x2
-			v1 = rotl64_31(v1) * prime64x1
-
-			v2 += u64(in[8:16:len(in)]) * prime64x2
-			v2 = rotl64_31(v2) * prime64x1
-
-			v3 += u64(in[16:24:len(in)]) * prime64x2
-			v3 = rotl64_31(v3) * prime64x1
-
-			v4 += u64(in[24:32:len(in)]) * prime64x2
-			v4 = rotl64_31(v4) * prime64x1
+		for _, k := range words {
+			k *= prime64x2
+			k = rotl64_31(k)
+			k *= prime64x1
+			h ^= k
+			h = rotl64_27(h)*prime64x1 + prime64x4
+			i += 8
 		}
-
-		h = rotl64_1(v1) + rotl64_7(v2) + rotl64_12(v3) + rotl64_18(v4)
-		v1 *= prime64x2
-		v1 = rotl64_31(v1)
-		v1 *= prime64x1
-		h ^= v1
-		h = h*prime64x1 + prime64x4
-
-		v2 *= prime64x2
-		v2 = rotl64_31(v2)
-		v2 *= prime64x1
-		h ^= v2
-		h = h*prime64x1 + prime64x4
-
-		v3 *= prime64x2
-		v3 = rotl64_31(v3)
-		v3 *= prime64x1
-		h ^= v3
-		h = h*prime64x1 + prime64x4
-
-		v4 *= prime64x2
-		v4 = rotl64_31(v4)
-		v4 *= prime64x1
-		h ^= v4
-		h = h*prime64x1 + prime64x4
-	} else {
-		h = seed + prime64x5
 	}
 
-	h += uint64(len(in))
+	// log.Println(len(in))
+	// for ; i < len(in)-7; i += 8 {
+	// 	k := u64(in[i : i+8 : len(in)])
+	// 	k *= prime64x2
+	// 	k = rotl64_31(k)
+	// 	k *= prime64x1
+	// 	h ^= k
+	// 	h = rotl64_27(h)*prime64x1 + prime64x4
+	// }
 
-	for ; i < len(in)-7; i += 8 {
-		in := in[i : i+8 : len(in)]
-		k := u64(in[0:8:len(in)])
-		k *= prime64x2
-		k = rotl64_31(k)
-		k *= prime64x1
-		h ^= k
-		h = rotl64_27(h)*prime64x1 + prime64x4
-	}
-
-	for ; i < len(in)-3; i += 4 {
-		in := in[i : i+4 : len(in)]
-		h ^= uint64(u32(in[0:4:len(in)])) * prime64x1
+	if i < len(in)-3 {
+		h ^= uint64((*(*[]uint64)(unsafe.Pointer(&in)))[0]) * prime64x1
 		h = rotl64_23(h)*prime64x2 + prime64x3
+		i += 4
 	}
 
-	for ; i < len(in); i++ {
-		h ^= uint64(in[i]) * prime64x5
+	for _, b := range in[i:] {
+		h ^= uint64(b) * prime64x5
 		h = rotl64_11(h) * prime64x1
 	}
 
-	h ^= h >> 33
-	h *= prime64x2
-	h ^= h >> 29
-	h *= prime64x3
-	h ^= h >> 32
-
-	return h
+	return mix64(h)
 }
 
 func (xx *XXHash64) Write(in []byte) (n int, err error) {
