@@ -163,8 +163,9 @@ func Checksum64S(in []byte, seed uint64) uint64 {
 	if len(in) > 7 {
 		var (
 			wordsLen = int(uint32(len(in)) >> 3)
-			words    = (*(*[]uint64)(unsafe.Pointer(&in)))[:wordsLen:wordsLen]
+			words    = ((*[maxInt32]uint64)(unsafe.Pointer(&in[0])))[:wordsLen:wordsLen]
 		)
+
 		for _, k := range words {
 			k *= prime64x2
 			k = rotl64_31(k)
@@ -185,8 +186,8 @@ func Checksum64S(in []byte, seed uint64) uint64 {
 	// 	h = rotl64_27(h)*prime64x1 + prime64x4
 	// }
 
-	if i < len(in)-3 {
-		h ^= uint64((*(*[]uint32)(unsafe.Pointer(&in)))[0]) * prime64x1
+	if len(in) > 3 {
+		h ^= uint64((*(*[1]uint32)(unsafe.Pointer(&in[i])))[0]) * prime64x1
 		h = rotl64_23(h)*prime64x2 + prime64x3
 		i += 4
 	}

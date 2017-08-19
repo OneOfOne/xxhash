@@ -14,13 +14,13 @@ const Backend = "GoUnsafe"
 // ChecksumString32S returns the checksum of the input data, without creating a copy, with the specific seed.
 func ChecksumString32S(s string, seed uint32) uint32 {
 	ss := (*reflect.StringHeader)(unsafe.Pointer(&s))
-	return Checksum32S((*[maxInt32]byte)(unsafe.Pointer(ss.Data))[:len(s)], seed)
+	return Checksum32S((*[maxInt32]byte)(unsafe.Pointer(ss.Data))[:len(s):len(s)], seed)
 }
 
 // ChecksumString64S returns the checksum of the input data, without creating a copy, with the specific seed.
 func ChecksumString64S(s string, seed uint64) uint64 {
 	ss := (*reflect.StringHeader)(unsafe.Pointer(&s))
-	return Checksum64S((*[maxInt32]byte)(unsafe.Pointer(ss.Data))[:len(s)], seed)
+	return Checksum64S((*[maxInt32]byte)(unsafe.Pointer(ss.Data))[:len(s):len(s)], seed)
 }
 
 func writeString32(w *XXHash32, s string) (int, error) {
@@ -28,7 +28,7 @@ func writeString32(w *XXHash32, s string) (int, error) {
 		return 0, nil
 	}
 	ss := (*reflect.StringHeader)(unsafe.Pointer(&s))
-	return w.Write((*[maxInt32]byte)(unsafe.Pointer(ss.Data))[:len(s)])
+	return w.Write((*[maxInt32]byte)(unsafe.Pointer(ss.Data))[:len(s):len(s)])
 }
 
 func writeString64(w *XXHash64, s string) (int, error) {
@@ -55,19 +55,19 @@ func checksum64S(in []byte, seed uint64) uint64 {
 		i int
 	)
 
-	for ; i < len(words)-3; i += 4 {
-		words := words[i : i+4 : len(words)]
+	for m := len(words) - 3; i < m; i += 4 {
+		_ = words[i+3]
 
-		v1 += words[0] * prime64x2
+		v1 += words[i] * prime64x2
 		v1 = rotl64_31(v1) * prime64x1
 
-		v2 += words[1] * prime64x2
+		v2 += words[i+1] * prime64x2
 		v2 = rotl64_31(v2) * prime64x1
 
-		v3 += words[2] * prime64x2
+		v3 += words[i+2] * prime64x2
 		v3 = rotl64_31(v3) * prime64x1
 
-		v4 += words[3] * prime64x2
+		v4 += words[i+3] * prime64x2
 		v4 = rotl64_31(v4) * prime64x1
 	}
 
