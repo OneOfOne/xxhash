@@ -8,11 +8,21 @@ import (
 	"github.com/cespare/xxhash"
 )
 
-func BenchmarkCespareXXChecksum64(b *testing.B) {
+func BenchmarkXXSum64Cespare(b *testing.B) {
 	var bv uint64
-	for i := 0; i < b.N; i++ {
-		bv += xxhash.Sum64(in)
-	}
+	b.Run("Func", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			bv += xxhash.Sum64(in)
+		}
+	})
+	b.Run("Struct", func(b *testing.B) {
+		h := xxhash.New()
+		for i := 0; i < b.N; i++ {
+			h.Write(in)
+			bv += h.Sum64()
+			h.Reset()
+		}
+	})
 }
 
 func BenchmarkCespareXXChecksum64Short(b *testing.B) {

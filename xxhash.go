@@ -70,10 +70,6 @@ func (xx *XXHash32) Reset() {
 	xx.ln, xx.memIdx = 0, 0
 }
 
-func (xx *XXHash32) WriteString(s string) (int, error) {
-	return writeString32(xx, s)
-}
-
 // Sum appends the current hash to b and returns the resulting slice.
 // It does not change the underlying hash state.
 func (xx *XXHash32) Sum(in []byte) []byte {
@@ -92,11 +88,19 @@ func ChecksumString64(s string) uint64 {
 }
 
 type XXHash64 struct {
-	mem            [32]byte
 	v1, v2, v3, v4 uint64
 	seed           uint64
 	ln             uint64
-	memIdx         int32
+	mem            [32]byte
+	memIdx         int8
+}
+
+var zeroVs64 = [...]uint64{
+	// workaround static overflow checker
+	func(s uint64) uint64 { return s + prime64x1 + prime64x2 }(0),
+	prime64x2,
+	0,
+	func(s uint64) uint64 { return s - prime64x1 }(0),
 }
 
 // Size returns the number of bytes Sum will return.
@@ -127,15 +131,8 @@ func New64() *XXHash64 {
 }
 
 func (xx *XXHash64) Reset() {
-	xx.v1 = xx.seed + prime64x1 + prime64x2
-	xx.v2 = xx.seed + prime64x2
-	xx.v3 = xx.seed
-	xx.v4 = xx.seed - prime64x1
 	xx.ln, xx.memIdx = 0, 0
-}
-
-func (xx *XXHash64) WriteString(s string) (int, error) {
-	return writeString64(xx, s)
+	xx.v1, xx.v2, xx.v3, xx.v4 = resetVs64(xx.seed)
 }
 
 // Sum appends the current hash to b and returns the resulting slice.
@@ -173,10 +170,23 @@ func mix64(h uint64) uint64 {
 	return h
 }
 
-func doVx64(h, v uint64) uint64 {
-	v *= prime64x2
-	v = rotl64_31(v)
-	v *= prime64x1
+func resetVs64(seed uint64) (v1, v2, v3, v4 uint64) {
+	if seed == 0 {
+		return zeroVs64[0], zeroVs64[1], zeroVs64[2], zeroVs64[3]
+	}
+	return (seed + prime64x1 + prime64x2), (seed + prime64x2), (seed), (seed - prime64x1)
+}
+
+// borrowed from cespare
+func round64(h, v uint64) uint64 {
+	h += v * prime64x2
+	h = rotl64_31(h)
+	h *= prime64x1
+	return h
+}
+
+func mergeRound64(h, v uint64) uint64 {
+	v = round64(0, v)
 	h ^= v
 	h = h*prime64x1 + prime64x4
 	return h

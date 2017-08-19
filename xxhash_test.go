@@ -49,22 +49,6 @@ func TestHash32Short(t *testing.T) {
 	}
 }
 
-func TestHash64(t *testing.T) {
-	h := xxhash.New64()
-	h.Write(in)
-	r := h.Sum64()
-	if r != expected64 {
-		t.Errorf("expected 0x%x, got 0x%x.", expected64, r)
-	}
-}
-
-func TestHash64Short(t *testing.T) {
-	r := xxhash.Checksum64(in)
-	if r != expected64 {
-		t.Errorf("expected 0x%x, got 0x%x.", expected64, r)
-	}
-}
-
 func TestWriteStringNil(t *testing.T) {
 	h32, h64 := xxhash.New32(), xxhash.New64()
 	for i := 0; i < 1e6; i++ {
@@ -74,23 +58,27 @@ func TestWriteStringNil(t *testing.T) {
 	_, _ = h32.Sum32(), h64.Sum64()
 }
 
+var testsTable = []struct {
+	input string
+	want  uint64
+}{
+	{"", 0xef46db3751d8e999},
+	{"a", 0xd24ec4f1a98c6e5b},
+	{"as", 0x1c330fb2d66be179},
+	{"asd", 0x631c37ce72a97393},
+	{"asdf", 0x415872f599cea71e},
+	{
+		// Exactly 63 characters, which exercises all code paths.
+		"Call me Ishmael. Some years ago--never mind how long precisely-",
+		0x02a2e85470d6fd96,
+	},
+	{"The quick brown fox jumps over the lazy dog http://i.imgur.com/VHQXScB.gif", 0x93267f9820452ead},
+	{string(in), expected64},
+}
+
 // Shamelessly copied from https://github.com/cespare/xxhash/blob/5c37fe3735342a2e0d01c87a907579987c8936cc/xxhash_test.go#L28
-func TestSum(t *testing.T) {
-	for i, tt := range []struct {
-		input string
-		want  uint64
-	}{
-		{"", 0xef46db3751d8e999},
-		{"a", 0xd24ec4f1a98c6e5b},
-		{"as", 0x1c330fb2d66be179},
-		{"asd", 0x631c37ce72a97393},
-		{"asdf", 0x415872f599cea71e},
-		{
-			// Exactly 63 characters, which exercises all code paths.
-			"Call me Ishmael. Some years ago--never mind how long precisely-",
-			0x02a2e85470d6fd96,
-		},
-	} {
+func TestSum64(t *testing.T) {
+	for i, tt := range testsTable {
 		for chunkSize := 1; chunkSize <= len(tt.input); chunkSize++ {
 			x := xxhash.New64()
 			for j := 0; j < len(tt.input); j += chunkSize {
@@ -98,8 +86,8 @@ func TestSum(t *testing.T) {
 				if end > len(tt.input) {
 					end = len(tt.input)
 				}
-				chunk := []byte(tt.input[j:end])
-				n, err := x.Write(chunk)
+				chunk := tt.input[j:end]
+				n, err := x.WriteString(chunk)
 				if err != nil || n != len(chunk) {
 					t.Fatalf("[i=%d,chunkSize=%d] Write: got (%d, %v); want (%d, nil)",
 						i, chunkSize, n, err, len(chunk))
@@ -109,6 +97,10 @@ func TestSum(t *testing.T) {
 				t.Fatalf("[i=%d,chunkSize=%d] got 0x%x; want 0x%x",
 					i, chunkSize, got, tt.want)
 			}
+			if got := x.Sum64(); got != tt.want {
+				t.Fatalf("[i=%d,chunkSize=%d] got 0x%x; want 0x%x (called .Sum64 twice)",
+					i, chunkSize, got, tt.want)
+			}
 			var b [8]byte
 			binary.BigEndian.PutUint64(b[:], tt.want)
 			if got := x.Sum(nil); !bytes.Equal(got, b[:]) {
@@ -116,9 +108,7 @@ func TestSum(t *testing.T) {
 					i, chunkSize, got, b[:])
 			}
 		}
-		if got := xxhash.Checksum64([]byte(tt.input)); got != tt.want {
-			t.Fatalf("[i=%d] Checksum64: got 0x%x; want 0x%x", i, got, tt.want)
-		}
+
 		if got := xxhash.ChecksumString64(tt.input); got != tt.want {
 			t.Fatalf("[i=%d] ChecksumString64: got 0x%x; want 0x%x", i, got, tt.want)
 		}
@@ -139,11 +129,21 @@ func BenchmarkXXChecksumString32(b *testing.B) {
 	}
 }
 
-func BenchmarkXXChecksum64(b *testing.B) {
+func BenchmarkXXSum64(b *testing.B) {
 	var bv uint64
-	for i := 0; i < b.N; i++ {
-		bv += xxhash.Checksum64(in)
-	}
+	b.Run("Func", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			bv += xxhash.Checksum64(in)
+		}
+	})
+	b.Run("Struct", func(b *testing.B) {
+		h := xxhash.New64()
+		for i := 0; i < b.N; i++ {
+			h.Write(in)
+			bv += h.Sum64()
+			h.Reset()
+		}
+	})
 }
 
 func BenchmarkXXChecksumString64(b *testing.B) {
@@ -254,16 +254,6 @@ func BenchmarkFnv64Short(b *testing.B) {
 		bv = h.Sum(nil)
 	}
 	_ = bv
-}
-
-func BenchmarkXX64MultiWrites(b *testing.B) {
-	var bv uint64
-	h := xxhash.New64()
-	for i := 0; i < b.N; i++ {
-		h.Write(in)
-		bv += h.Sum64()
-		h.Reset()
-	}
 }
 
 func BenchmarkFnv64MultiWrites(b *testing.B) {
