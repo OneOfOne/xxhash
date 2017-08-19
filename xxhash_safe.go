@@ -27,7 +27,7 @@ func (xx *XXHash64) WriteString(s string) (int, error) {
 	return xx.Write([]byte(s))
 }
 
-func checksum64S(in []byte, seed uint64) (h uint64) {
+func checksum64(in []byte, seed uint64) (h uint64) {
 	var (
 		v1 = seed + prime64x1 + prime64x2
 		v2 = seed + prime64x2
@@ -63,10 +63,32 @@ func checksum64S(in []byte, seed uint64) (h uint64) {
 
 	for ; i < len(in)-7; i += 8 {
 		k := u64(in[i : i+8 : len(in)])
-		k *= prime64x2
-		k = rotl64_31(k)
-		k *= prime64x1
-		h ^= k
+		h ^= round64(0, k)
+		h = rotl64_27(h)*prime64x1 + prime64x4
+	}
+
+	for ; i < len(in)-3; i += 4 {
+		h ^= uint64(u32(in[i:i+4:len(in)])) * prime64x1
+		h = rotl64_23(h)*prime64x2 + prime64x3
+	}
+
+	for ; i < len(in); i++ {
+		h ^= uint64(in[i]) * prime64x5
+		h = rotl64_11(h) * prime64x1
+	}
+
+	return mix64(h)
+}
+
+func checksum64Short(in []byte, seed uint64) uint64 {
+	var (
+		h = seed + prime64x5 + uint64(len(in))
+		i int
+	)
+
+	for ; i < len(in)-7; i += 8 {
+		k := u64(in[i : i+8 : len(in)])
+		h ^= round64(0, k)
 		h = rotl64_27(h)*prime64x1 + prime64x4
 	}
 

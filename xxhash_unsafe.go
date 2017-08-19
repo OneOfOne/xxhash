@@ -47,10 +47,9 @@ func (xx *XXHash64) WriteString(s string) (int, error) {
 	return xx.Write((*[maxInt32]byte)(unsafe.Pointer(ss.Data))[:len(s)])
 }
 
-// Checksum64S returns the 64bit xxhash checksum for a single input
-func checksum64S(in []byte, seed uint64) uint64 {
+func checksum64(in []byte, seed uint64) uint64 {
 	var (
-		wordsLen = int(uint32(len(in)) >> 3)
+		wordsLen = len(in) >> 3
 		words    = ((*[maxInt32]uint64)(unsafe.Pointer(&in[0])))[:wordsLen:wordsLen]
 
 		h uint64 = prime64x5
@@ -60,11 +59,7 @@ func checksum64S(in []byte, seed uint64) uint64 {
 		i int
 	)
 
-	if len(in) < 32 {
-		goto LessThan32
-	}
-
-	for m := len(words) - 3; i < m; i += 4 {
+	for ; i < len(words)-3; i += 4 {
 		words := (*[4]uint64)(unsafe.Pointer(&words[i]))
 
 		v1 = round64(v1, words[0])
@@ -80,12 +75,10 @@ func checksum64S(in []byte, seed uint64) uint64 {
 	h = mergeRound64(h, v3)
 	h = mergeRound64(h, v4)
 
-LessThan32:
 	h += uint64(len(in))
 
-	for ; i < len(words); i++ {
-		k := round64(0, words[i])
-		h ^= k
+	for _, k := range words[i:] {
+		h ^= round64(0, k)
 		h = rotl64_27(h)*prime64x1 + prime64x4
 	}
 
@@ -105,55 +98,62 @@ LessThan32:
 	return mix64(h)
 }
 
-/*
-func (x *xxh) Write(b []byte) (n int, err error) {
-	n = len(b)
-	x.total += len(b)
+func checksum64Short(in []byte, seed uint64) uint64 {
+	var (
+		h = seed + prime64x5 + uint64(len(in))
+		i int
+	)
 
-	if x.n+len(b) < 32 {
-		// This new data doesn't even fill the current block.
-		copy(x.mem[x.n:], b)
-		x.n += len(b)
-		return
+	if len(in) > 7 {
+		var (
+			wordsLen = len(in) >> 3
+			words    = ((*[maxInt32]uint64)(unsafe.Pointer(&in[0])))[:wordsLen:wordsLen]
+		)
+
+		for i := range words {
+			h ^= round64(0, words[i])
+			h = rotl64_27(h)*prime64x1 + prime64x4
+		}
+
+		i = wordsLen << 3
 	}
 
-	if x.n > 0 {
-		// Finish off the partial block.
-		copy(x.mem[x.n:], b)
-		x.v1 = round(x.v1, u64(x.mem[0:8]))
-		x.v2 = round(x.v2, u64(x.mem[8:16]))
-		x.v3 = round(x.v3, u64(x.mem[16:24]))
-		x.v4 = round(x.v4, u64(x.mem[24:32]))
-		b = b[32-x.n:]
-		x.n = 0
+	if in = in[i:len(in):len(in)]; len(in) > 3 {
+		words := (*[1]uint32)(unsafe.Pointer(&in[0]))
+		h ^= uint64(words[0]) * prime64x1
+		h = rotl64_23(h)*prime64x2 + prime64x3
+
+		in = in[4:len(in):len(in)]
 	}
 
-	if len(b) >= 32 {
-		// One or more full blocks left.
-		b = writeBlocks(x, b)
+	for _, b := range in {
+		h ^= uint64(b) * prime64x5
+		h = rotl64_11(h) * prime64x1
 	}
 
-	// Store any remaining partial block.
-	copy(x.mem[:], b)
-	x.n = len(b)
-
-	return
+	return mix64(h)
 }
-*/
 
 func (xx *XXHash64) Write(in []byte) (n int, err error) {
+	mem, idx := xx.mem[:], int(xx.memIdx)
+
 	xx.ln, n = xx.ln+uint64(len(in)), len(in)
 
-	if int(xx.memIdx)+len(in) < 32 {
-		xx.memIdx += int8(copy(xx.mem[xx.memIdx:len(xx.mem):len(xx.mem)], in))
+	if idx+len(in) < 32 {
+		xx.memIdx += int8(copy(mem[idx:len(mem):len(mem)], in))
 		return
 	}
 
-	i, v1, v2, v3, v4 := 0, xx.v1, xx.v2, xx.v3, xx.v4
-	if d := 32 - int(xx.memIdx); d > 0 && int(xx.memIdx)+len(in) > 31 {
-		copy(xx.mem[xx.memIdx:len(xx.mem):len(xx.mem)], in[:d:len(in)])
+	var (
+		v1, v2, v3, v4 = xx.v1, xx.v2, xx.v3, xx.v4
 
-		words := (*[4]uint64)(unsafe.Pointer(&xx.mem[0]))
+		i int
+	)
+
+	if d := 32 - int(idx); d > 0 && int(idx)+len(in) > 31 {
+		copy(mem[idx:len(mem):len(mem)], in[:len(in):len(in)])
+
+		words := (*[4]uint64)(unsafe.Pointer(&mem[0]))
 
 		v1 = round64(v1, words[0])
 		v2 = round64(v2, words[1])
@@ -175,8 +175,9 @@ func (xx *XXHash64) Write(in []byte) (n int, err error) {
 	}
 
 	if len(in)-i != 0 {
-		xx.memIdx += int8(copy(xx.mem[xx.memIdx:len(xx.mem):len(xx.mem)], in[i:len(in):len(in)]))
+		xx.memIdx += int8(copy(mem[xx.memIdx:len(mem):len(mem)], in[i:len(in):len(in)]))
 	}
+
 RET:
 	xx.v1, xx.v2, xx.v3, xx.v4 = v1, v2, v3, v4
 
@@ -184,7 +185,7 @@ RET:
 }
 
 func (xx *XXHash64) Sum64() (h uint64) {
-	if xx.ln > 31 {
+	if seed := xx.seed; xx.ln > 31 {
 		v1, v2, v3, v4 := xx.v1, xx.v2, xx.v3, xx.v4
 		h = rotl64_1(v1) + rotl64_7(v2) + rotl64_12(v3) + rotl64_18(v4)
 
@@ -192,36 +193,41 @@ func (xx *XXHash64) Sum64() (h uint64) {
 		h = mergeRound64(h, v2)
 		h = mergeRound64(h, v3)
 		h = mergeRound64(h, v4)
+	} else if seed == 0 {
+		h = prime64x5
 	} else {
 		h = xx.seed + prime64x5
 	}
 
 	h += uint64(xx.ln)
-	if xx.memIdx > 0 {
-		var (
-			in       = xx.mem[:xx.memIdx:xx.memIdx]
-			wordsLen = int(uint32(len(in)) >> 3)
-			words    = ((*[maxInt32]uint64)(unsafe.Pointer(&in[0])))[:wordsLen:wordsLen]
-		)
 
-		for _, k := range words {
-			h ^= round64(0, k)
-			h = rotl64_27(h)*prime64x1 + prime64x4
-		}
+	if xx.memIdx == 0 {
+		return mix64(h)
+	}
 
-		if in = in[wordsLen<<3 : len(in):len(in)]; len(in) > 3 {
-			words := (*[1]uint32)(unsafe.Pointer(&in[0]))
+	var (
+		in       = xx.mem[:xx.memIdx:xx.memIdx]
+		wordsLen = len(in) >> 3
+		words    = ((*[maxInt32]uint64)(unsafe.Pointer(&in[0])))[:wordsLen:wordsLen]
+	)
 
-			h ^= uint64(words[0]) * prime64x1
-			h = rotl64_23(h)*prime64x2 + prime64x3
+	for _, k := range words {
+		h ^= round64(0, k)
+		h = rotl64_27(h)*prime64x1 + prime64x4
+	}
 
-			in = in[4:len(in):len(in)]
-		}
+	if in = in[wordsLen<<3 : len(in):len(in)]; len(in) > 3 {
+		words := (*[1]uint32)(unsafe.Pointer(&in[0]))
 
-		for _, b := range in {
-			h ^= uint64(b) * prime64x5
-			h = rotl64_11(h) * prime64x1
-		}
+		h ^= uint64(words[0]) * prime64x1
+		h = rotl64_23(h)*prime64x2 + prime64x3
+
+		in = in[4:len(in):len(in)]
+	}
+
+	for _, b := range in {
+		h ^= uint64(b) * prime64x5
+		h = rotl64_11(h) * prime64x1
 	}
 
 	return mix64(h)

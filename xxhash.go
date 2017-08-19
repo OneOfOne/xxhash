@@ -1,8 +1,6 @@
 package xxhash
 
 const (
-	debug = false // set to true to debug len/cap errors
-
 	prime32x1 uint32 = 2654435761
 	prime32x2 uint32 = 2246822519
 	prime32x3 uint32 = 3266489917

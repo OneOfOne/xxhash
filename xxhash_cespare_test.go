@@ -25,10 +25,20 @@ func BenchmarkXXSum64Cespare(b *testing.B) {
 	})
 }
 
-func BenchmarkCespareXXChecksum64Short(b *testing.B) {
+func BenchmarkCespareXXSum64Short(b *testing.B) {
 	var bv uint64
 	k := []byte("Test-key-100")
-	for i := 0; i < b.N; i++ {
-		bv += xxhash.Sum64(k)
-	}
+	b.Run("Func", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			bv += xxhash.Sum64(k)
+		}
+	})
+	b.Run("Struct", func(b *testing.B) {
+		h := xxhash.New()
+		for i := 0; i < b.N; i++ {
+			h.Write(k)
+			bv += h.Sum64()
+			h.Reset()
+		}
+	})
 }

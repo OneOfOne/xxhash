@@ -7,6 +7,7 @@ import (
 	"hash/crc32"
 	"hash/crc64"
 	"hash/fnv"
+	"strconv"
 	"testing"
 
 	"github.com/OneOfOne/xxhash"
@@ -212,11 +213,41 @@ func BenchmarkCRC64ISOString(b *testing.B) {
 	}
 }
 
-func BenchmarkXXChecksum64Short(b *testing.B) {
+func BenchmarkXXSum64Short(b *testing.B) {
 	var bv uint64
-	k := []byte("Test-key-100")
-	for i := 0; i < b.N; i++ {
-		bv += xxhash.Checksum64(k)
+	k := []byte("Test-key-1000")
+	b.Run("Func", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			bv += xxhash.Checksum64(k)
+		}
+	})
+	b.Run("Struct", func(b *testing.B) {
+		h := xxhash.New64()
+		for i := 0; i < b.N; i++ {
+			h.Write(k)
+			bv += h.Sum64()
+			h.Reset()
+		}
+	})
+}
+func BenchmarkXXSum64EvenPoint(b *testing.B) {
+	b.Skip("comment this")
+
+	for i := 256; i < len(in); i += 256 {
+		block := in[:i]
+		b.Run("Func/"+strconv.Itoa(i), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				xxhash.Checksum64(block)
+			}
+		})
+		b.Run("Struct/"+strconv.Itoa(i), func(b *testing.B) {
+			h := xxhash.New64()
+			for i := 0; i < b.N; i++ {
+				h.Write(block)
+				h.Sum64()
+				h.Reset()
+			}
+		})
 	}
 }
 

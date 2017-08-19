@@ -1,7 +1,5 @@
 package xxhash
 
-import "unsafe"
-
 func u32(in []byte) uint32 {
 	return uint32(in[0]) | uint32(in[1])<<8 | uint32(in[2])<<16 | uint32(in[3])<<24
 }
@@ -150,54 +148,13 @@ func (xx *XXHash32) Sum32() (h uint32) {
 
 // Checksum64S returns the 64bit xxhash checksum for a single input
 func Checksum64S(in []byte, seed uint64) uint64 {
+	if len(in) == 0 && seed == 0 {
+		return 0xef46db3751d8e999
+	}
+
 	if len(in) > 31 {
-		return checksum64S(in, seed)
+		return checksum64(in, seed)
 	}
 
-	var (
-		h = seed + prime64x5 + uint64(len(in))
-
-		i int
-	)
-
-	if len(in) > 7 {
-		var (
-			wordsLen = int(uint32(len(in)) >> 3)
-			words    = ((*[maxInt32]uint64)(unsafe.Pointer(&in[0])))[:wordsLen:wordsLen]
-		)
-
-		for _, k := range words {
-			k *= prime64x2
-			k = rotl64_31(k)
-			k *= prime64x1
-			h ^= k
-			h = rotl64_27(h)*prime64x1 + prime64x4
-			i += 8
-		}
-	}
-
-	// log.Println(len(in))
-	// for ; i < len(in)-7; i += 8 {
-	// 	k := u64(in[i : i+8 : len(in)])
-	// 	k *= prime64x2
-	// 	k = rotl64_31(k)
-	// 	k *= prime64x1
-	// 	h ^= k
-	// 	h = rotl64_27(h)*prime64x1 + prime64x4
-	// }
-
-	if len(in) > 3 {
-		words := (*[1]uint32)(unsafe.Pointer(&in[i]))
-		h ^= uint64(words[0]) * prime64x1
-		h = rotl64_23(h)*prime64x2 + prime64x3
-
-		i += 4
-	}
-
-	for _, b := range in[i:] {
-		h ^= uint64(b) * prime64x5
-		h = rotl64_11(h) * prime64x1
-	}
-
-	return mix64(h)
+	return checksum64Short(in, seed)
 }
