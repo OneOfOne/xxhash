@@ -196,7 +196,7 @@ func (xx *XXHash64) Sum64() (h uint64) {
 	} else if seed == 0 {
 		h = prime64x5
 	} else {
-		h = xx.seed + prime64x5
+		h = seed + prime64x5
 	}
 
 	h += uint64(xx.ln)

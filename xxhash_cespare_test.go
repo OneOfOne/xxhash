@@ -25,7 +25,7 @@ func BenchmarkXXSum64Cespare(b *testing.B) {
 	})
 }
 
-func BenchmarkCespareXXSum64Short(b *testing.B) {
+func BenchmarkXXSum64ShortCespare(b *testing.B) {
 	var bv uint64
 	k := []byte("Test-key-100")
 	b.Run("Func", func(b *testing.B) {

@@ -7,6 +7,7 @@ import (
 	"hash/crc32"
 	"hash/crc64"
 	"hash/fnv"
+	"os"
 	"strconv"
 	"testing"
 
@@ -117,121 +118,54 @@ func TestSum64(t *testing.T) {
 }
 
 func BenchmarkXXChecksum32(b *testing.B) {
-	var bv uint32
 	for i := 0; i < b.N; i++ {
-		bv += xxhash.Checksum32(in)
+		xxhash.Checksum32(in)
 	}
 }
 
 func BenchmarkXXChecksumString32(b *testing.B) {
-	var bv uint32
 	for i := 0; i < b.N; i++ {
-		bv += xxhash.ChecksumString32(inS)
+		xxhash.ChecksumString32(inS)
 	}
 }
 
 func BenchmarkXXSum64(b *testing.B) {
-	var bv uint64
 	b.Run("Func", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			bv += xxhash.Checksum64(in)
+			xxhash.Checksum64(in)
 		}
 	})
 	b.Run("Struct", func(b *testing.B) {
 		h := xxhash.New64()
 		for i := 0; i < b.N; i++ {
 			h.Write(in)
-			bv += h.Sum64()
+			h.Sum64()
 			h.Reset()
 		}
 	})
 }
 
-func BenchmarkXXChecksumString64(b *testing.B) {
-	var bv uint64
-	for i := 0; i < b.N; i++ {
-		bv += xxhash.ChecksumString64(inS)
-	}
-}
-
-func BenchmarkFnv32(b *testing.B) {
-	var bv []byte
-	h := fnv.New32()
-	for i := 0; i < b.N; i++ {
-		h.Write(in)
-		bv = h.Sum(nil)
-		h.Reset()
-	}
-	_ = bv
-}
-
-func BenchmarkFnv64(b *testing.B) {
-	var bv []byte
-	h := fnv.New64()
-	for i := 0; i < b.N; i++ {
-		h.Write(in)
-		bv = h.Sum(nil)
-		h.Reset()
-	}
-	_ = bv
-}
-
-func BenchmarkAdler32(b *testing.B) {
-	var bv uint32
-	for i := 0; i < b.N; i++ {
-		bv += adler32.Checksum(in)
-	}
-}
-
-func BenchmarkCRC32IEEE(b *testing.B) {
-	var bv uint32
-	for i := 0; i < b.N; i++ {
-		bv += crc32.ChecksumIEEE(in)
-	}
-}
-
-func BenchmarkCRC32IEEEString(b *testing.B) {
-	var bv uint32
-	for i := 0; i < b.N; i++ {
-		bv += crc32.ChecksumIEEE([]byte(inS))
-	}
-}
-
-var crc64ISO = crc64.MakeTable(crc64.ISO)
-
-func BenchmarkCRC64ISO(b *testing.B) {
-	var bv uint64
-	for i := 0; i < b.N; i++ {
-		bv += crc64.Checksum(in, crc64ISO)
-	}
-}
-
-func BenchmarkCRC64ISOString(b *testing.B) {
-	var bv uint64
-	for i := 0; i < b.N; i++ {
-		bv += crc64.Checksum([]byte(inS), crc64ISO)
-	}
-}
-
 func BenchmarkXXSum64Short(b *testing.B) {
-	var bv uint64
 	k := []byte("Test-key-1000")
 	b.Run("Func", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			bv += xxhash.Checksum64(k)
+			xxhash.Checksum64(k)
 		}
 	})
 	b.Run("Struct", func(b *testing.B) {
 		h := xxhash.New64()
 		for i := 0; i < b.N; i++ {
 			h.Write(k)
-			bv += h.Sum64()
+			h.Sum64()
 			h.Reset()
 		}
 	})
 }
+
 func BenchmarkXXSum64EvenPoint(b *testing.B) {
-	b.Skip("comment this")
+	if os.Getenv("EP") == "" {
+		b.SkipNow()
+	}
 
 	for i := 256; i < len(in); i += 256 {
 		block := in[:i]
@@ -251,28 +185,70 @@ func BenchmarkXXSum64EvenPoint(b *testing.B) {
 	}
 }
 
-func BenchmarkXXChecksumString64Short(b *testing.B) {
-	var bv uint64
-	k := "Test-key-100"
+func BenchmarkFnv32(b *testing.B) {
+	var bv []byte
+	h := fnv.New32()
 	for i := 0; i < b.N; i++ {
-		bv += xxhash.ChecksumString64(k)
+		h.Write(in)
+		bv = h.Sum(nil)
+		h.Reset()
+	}
+	_ = bv
+}
+
+func BenchmarkAdler32(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		adler32.Checksum(in)
+	}
+}
+
+func BenchmarkCRC32IEEE(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		crc32.ChecksumIEEE(in)
+	}
+}
+
+func BenchmarkCRC32IEEEString(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		crc32.ChecksumIEEE([]byte(inS))
+	}
+}
+
+var crc64ISO = crc64.MakeTable(crc64.ISO)
+
+func BenchmarkCRC64ISO(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		crc64.Checksum(in, crc64ISO)
+	}
+}
+
+func BenchmarkCRC64ISOString(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		crc64.Checksum([]byte(inS), crc64ISO)
 	}
 }
 
 func BenchmarkCRC32IEEEShort(b *testing.B) {
-	var bv uint32
 	k := []byte("Test-key-100")
 
 	for i := 0; i < b.N; i++ {
-		bv += crc32.ChecksumIEEE(k)
+		crc32.ChecksumIEEE(k)
 	}
 }
 
 func BenchmarkCRC64ISOShort(b *testing.B) {
-	var bv uint64
 	k := []byte("Test-key-100")
 	for i := 0; i < b.N; i++ {
-		bv += crc64.Checksum(k, crc64ISO)
+		crc64.Checksum(k, crc64ISO)
+	}
+}
+
+func BenchmarkFnv64(b *testing.B) {
+	h := fnv.New64()
+	for i := 0; i < b.N; i++ {
+		h.Write(in)
+		h.Sum(nil)
+		h.Reset()
 	}
 }
 
@@ -285,14 +261,4 @@ func BenchmarkFnv64Short(b *testing.B) {
 		bv = h.Sum(nil)
 	}
 	_ = bv
-}
-
-func BenchmarkFnv64MultiWrites(b *testing.B) {
-	var bv uint64
-	h := fnv.New64()
-	for i := 0; i < b.N; i++ {
-		h.Write(in)
-		bv += h.Sum64()
-		h.Reset()
-	}
 }

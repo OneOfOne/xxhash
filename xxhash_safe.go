@@ -29,27 +29,17 @@ func (xx *XXHash64) WriteString(s string) (int, error) {
 
 func checksum64(in []byte, seed uint64) (h uint64) {
 	var (
-		v1 = seed + prime64x1 + prime64x2
-		v2 = seed + prime64x2
-		v3 = seed + 0
-		v4 = seed - prime64x1
+		v1, v2, v3, v4 = resetVs64(seed)
 
 		i int
 	)
 
 	for ; i < len(in)-31; i += 32 {
 		in := in[i : i+32 : len(in)]
-		v1 += u64(in[0:8:len(in)]) * prime64x2
-		v1 = rotl64_31(v1) * prime64x1
-
-		v2 += u64(in[8:16:len(in)]) * prime64x2
-		v2 = rotl64_31(v2) * prime64x1
-
-		v3 += u64(in[16:24:len(in)]) * prime64x2
-		v3 = rotl64_31(v3) * prime64x1
-
-		v4 += u64(in[24:32:len(in)]) * prime64x2
-		v4 = rotl64_31(v4) * prime64x1
+		v1 = round64(v1, u64(in[0:8:len(in)]))
+		v2 = round64(v2, u64(in[8:16:len(in)]))
+		v3 = round64(v3, u64(in[16:24:len(in)]))
+		v4 = round64(v4, u64(in[24:32:len(in)]))
 	}
 
 	h = rotl64_1(v1) + rotl64_7(v2) + rotl64_12(v3) + rotl64_18(v4)
@@ -62,13 +52,12 @@ func checksum64(in []byte, seed uint64) (h uint64) {
 	h += uint64(len(in))
 
 	for ; i < len(in)-7; i += 8 {
-		k := u64(in[i : i+8 : len(in)])
-		h ^= round64(0, k)
+		h ^= round64(0, u64(in[i:len(in):len(in)]))
 		h = rotl64_27(h)*prime64x1 + prime64x4
 	}
 
 	for ; i < len(in)-3; i += 4 {
-		h ^= uint64(u32(in[i:i+4:len(in)])) * prime64x1
+		h ^= uint64(u32(in[i:len(in):len(in)])) * prime64x1
 		h = rotl64_23(h)*prime64x2 + prime64x3
 	}
 
@@ -126,34 +115,20 @@ func (xx *XXHash64) Write(in []byte) (n int, err error) {
 
 		in := xx.mem[0:32:len(xx.mem)]
 
-		v1 += u64(in[0:8:len(in)]) * prime64x2
-		v1 = rotl64_31(v1) * prime64x1
-
-		v2 += u64(in[8:16:len(in)]) * prime64x2
-		v2 = rotl64_31(v2) * prime64x1
-
-		v3 += u64(in[16:24:len(in)]) * prime64x2
-		v3 = rotl64_31(v3) * prime64x1
-
-		v4 += u64(in[24:32:len(in)]) * prime64x2
-		v4 = rotl64_31(v4) * prime64x1
+		v1 = round64(v1, u64(in[0:8:len(in)]))
+		v2 = round64(v2, u64(in[8:16:len(in)]))
+		v3 = round64(v3, u64(in[16:24:len(in)]))
+		v4 = round64(v4, u64(in[24:32:len(in)]))
 
 		xx.memIdx = 0
 	}
 
 	for ; i < len(in)-31; i += 32 {
 		in := in[i : i+32 : len(in)]
-		v1 += u64(in[0:8:len(in)]) * prime64x2
-		v1 = rotl64_31(v1) * prime64x1
-
-		v2 += u64(in[8:16:len(in)]) * prime64x2
-		v2 = rotl64_31(v2) * prime64x1
-
-		v3 += u64(in[16:24:len(in)]) * prime64x2
-		v3 = rotl64_31(v3) * prime64x1
-
-		v4 += u64(in[24:32:len(in)]) * prime64x2
-		v4 = rotl64_31(v4) * prime64x1
+		v1 = round64(v1, u64(in[0:8:len(in)]))
+		v2 = round64(v2, u64(in[8:16:len(in)]))
+		v3 = round64(v3, u64(in[16:24:len(in)]))
+		v4 = round64(v4, u64(in[24:32:len(in)]))
 	}
 
 	if len(in)-i != 0 {
@@ -162,11 +137,6 @@ func (xx *XXHash64) Write(in []byte) (n int, err error) {
 
 	xx.v1, xx.v2, xx.v3, xx.v4 = v1, v2, v3, v4
 
-	if debug {
-		if len(in)-i > 32 {
-			panic("len(in) - i > 32")
-		}
-	}
 	return
 }
 
