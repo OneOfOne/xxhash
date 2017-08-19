@@ -1,7 +1,6 @@
 # xxhash [![GoDoc](http://godoc.org/github.com/OneOfOne/xxhash?status.svg)](http://godoc.org/github.com/OneOfOne/xxhash) [![Build Status](https://travis-ci.org/OneOfOne/xxhash.svg?branch=master)](https://travis-ci.org/OneOfOne/xxhash)
---
 
-This is a CGO wrapper and a native Go implementation of the excellent [xxhash](https://github.com/Cyan4973/xxHash)* algorithm, an extremely fast non-cryptographic Hash algorithm, working at speeds close to RAM limits.
+This is a native Go implementation of the excellent [xxhash](https://github.com/Cyan4973/xxHash)* algorithm, an extremely fast non-cryptographic Hash algorithm, working at speeds close to RAM limits.
 
 * The C implementation is ([Copyright](https://github.com/Cyan4973/xxHash/blob/master/LICENSE) (c) 2012-2014, Yann Collet)
 
@@ -14,58 +13,41 @@ This is a CGO wrapper and a native Go implementation of the excellent [xxhash](h
 * On Go 1.7+ the pure go version is faster than CGO for all inputs.
 * Supports ChecksumString{32,64} xxhash{32,64}.WriteString, which uses no copies when it can, falls back to copy on appengine.
 * The native version falls back to a less optimized version on appengine due to the lack of unsafe.
-
+* Almost as fast as the mostly pure assembly version written by the briliant [cespare](https://github.com/cespare/xxhash), while also supporting seeds.
+* To manually toggle the appengine version build with `-tags safe`.
 
 ## Benchmark
-```
-# need the forcecgo flag to actually bench CGO on 1.7
-go test github.com/OneOfOne/xxhash -bench=. -benchmem -tags forcecgo
-```
-
-### Core i7-4790 @ 3.60GHz, Linux 4.4.5 (64bit), Go tip (+fcd2a06 2016-03-28)
+### Core i7-4790 @ 3.60GHz, Linux 4.12.6-1-ARCH (64bit), Go tip (+ff90f4af66 2017-08-19)
 
 ```bash
-➜ go test -bench=. -benchtime 3s -tags forcecgo
-BenchmarkXXChecksum32-8                         10000000               352 ns/op
-BenchmarkXXChecksum32Cgo-8                      10000000               562 ns/op
+➤ go test -bench '64' -count 5 -tags cespare | benchstat /dev/stdin
+name                          time/op
 
-BenchmarkXXChecksumString32-8                   10000000               361 ns/op
-BenchmarkXXChecksumString32Cgo-8                10000000               572 ns/op
+# https://github.com/cespare/xxhash
+XXSum64Cespare/Func-8          160ns ± 2%
+XXSum64Cespare/Struct-8        173ns ± 1%
+XXSum64ShortCespare/Func-8    6.78ns ± 1%
+XXSum64ShortCespare/Struct-8  19.6ns ± 2%
 
-BenchmarkXXChecksum64-8                         20000000               188 ns/op
-BenchmarkXXChecksum64Cgo-8                      10000000               418 ns/op
+# this package (default mode, using unsafe)
+XXSum64/Func-8                 170ns ± 1%
+XXSum64/Struct-8               182ns ± 1%
+XXSum64Short/Func-8           13.5ns ± 3%
+XXSum64Short/Struct-8         20.4ns ± 0%
 
-BenchmarkXXChecksumString64-8                   20000000               202 ns/op
-BenchmarkXXChecksumString64Cgo-8                10000000               436 ns/op
+# this package (appengine, *not* using unsafe)
+XXSum64/Func-8                 241ns ± 5%
+XXSum64/Struct-8               243ns ± 6%
+XXSum64Short/Func-8           15.2ns ± 2%
+XXSum64Short/Struct-8         23.7ns ± 5%
 
-BenchmarkFnv32-8                                 2000000              2438 ns/op
-BenchmarkFnv64-8                                 2000000              2407 ns/op
+CRC64ISO-8                    1.23µs ± 1%
+CRC64ISOString-8              2.71µs ± 4%
+CRC64ISOShort-8               22.2ns ± 3%
 
-BenchmarkAdler32-8                               3000000              1242 ns/op
-
-BenchmarkCRC32IEEE-8                            20000000               206 ns/op
-BenchmarkCRC32IEEEString-8                       5000000               715 ns/op
-
-BenchmarkCRC64ISO-8                              1000000              4767 ns/op
-BenchmarkCRC64ISOString-8                        1000000              5418 ns/op
-
-BenchmarkXXChecksum64Short-8                    500000000                9.71 ns/op
-BenchmarkXXChecksum64ShortCgo-8                 20000000               263 ns/op
-
-BenchmarkXXChecksumString64Short-8              500000000               11.6 ns/op
-BenchmarkXXChecksumString64CgoShort-8           20000000               271 ns/op
-
-BenchmarkCRC32IEEEShort-8                       200000000               24.2 ns/op
-BenchmarkCRC64ISOShort-8                        200000000               22.6 ns/op
-
-BenchmarkFnv64Short-8                           100000000               58.7 ns/op
-
-BenchmarkXX64MultiWrites-8                      20000000               231 ns/op
-BenchmarkXX64CgoMultiWrites-8                    5000000               744 ns/op
-
-BenchmarkFnv64MultiWrites-8                      2000000              2368 ns/op
-PASS
-ok      github.com/OneOfOne/xxhash      137.142s
+Fnv64-8                       2.34µs ± 1%
+Fnv64Short-8                  74.7ns ± 8%
+#
 ```
 
 ## Usage
@@ -78,6 +60,9 @@ ok      github.com/OneOfOne/xxhash      137.142s
 	fmt.Println("File checksum:", h.Sum64())
 
 [<kbd>playground</kbd>](http://play.golang.org/p/rhRN3RdQyd)
+
+## TODO
+* Rewrite the 32bit version to be more optimized.
 
 ## License
 
