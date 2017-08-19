@@ -1,4 +1,4 @@
-# xxhash [![GoDoc](http://godoc.org/github.com/OneOfOne/xxhash?status.svg)](http://godoc.org/github.com/OneOfOne/xxhash) [![Build Status](https://travis-ci.org/OneOfOne/xxhash.svg?branch=master)](https://travis-ci.org/OneOfOne/xxhash)
+# xxhash [![GoDoc](https://godoc.org/github.com/OneOfOne/xxhash?status.svg)](https://godoc.org/github.com/OneOfOne/xxhash) [![Build Status](https://travis-ci.org/OneOfOne/xxhash.svg?branch=master)](https://travis-ci.org/OneOfOne/xxhash) [![Coverage](https://gocover.io/_badge/github.com/OneOfOne/xxhash)](https://gocover.io/github.com/OneOfOne/xxhash)
 
 This is a native Go implementation of the excellent [xxhash](https://github.com/Cyan4973/xxHash)* algorithm, an extremely fast non-cryptographic Hash algorithm, working at speeds close to RAM limits.
 
