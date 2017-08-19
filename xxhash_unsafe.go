@@ -56,18 +56,18 @@ func checksum64S(in []byte, seed uint64) uint64 {
 	)
 
 	for m := len(words) - 3; i < m; i += 4 {
-		_ = words[i+3]
+		words := (*[4]uint64)(unsafe.Pointer(&words[i]))
 
-		v1 += words[i] * prime64x2
+		v1 += words[0] * prime64x2
 		v1 = rotl64_31(v1) * prime64x1
 
-		v2 += words[i+1] * prime64x2
+		v2 += words[1] * prime64x2
 		v2 = rotl64_31(v2) * prime64x1
 
-		v3 += words[i+2] * prime64x2
+		v3 += words[2] * prime64x2
 		v3 = rotl64_31(v3) * prime64x1
 
-		v4 += words[i+3] * prime64x2
+		v4 += words[3] * prime64x2
 		v4 = rotl64_31(v4) * prime64x1
 	}
 
@@ -89,8 +89,9 @@ func checksum64S(in []byte, seed uint64) uint64 {
 		h = rotl64_27(h)*prime64x1 + prime64x4
 	}
 
-	if i = (i << 3); i < len(in)-3 {
-		h ^= uint64(((*[1]uint32)(unsafe.Pointer(&in[i])))[0]) * prime64x1
+	if i, in = 0, in[wordsLen<<3:]; len(in) > 3 {
+		words := (*[1]uint32)(unsafe.Pointer(&in[0]))
+		h ^= uint64(words[0]) * prime64x1
 		h = rotl64_23(h)*prime64x2 + prime64x3
 
 		i += 4

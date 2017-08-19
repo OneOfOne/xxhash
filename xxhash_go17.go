@@ -187,8 +187,10 @@ func Checksum64S(in []byte, seed uint64) uint64 {
 	// }
 
 	if len(in) > 3 {
-		h ^= uint64((*(*[1]uint32)(unsafe.Pointer(&in[i])))[0]) * prime64x1
+		words := (*[1]uint32)(unsafe.Pointer(&in[i]))
+		h ^= uint64(words[0]) * prime64x1
 		h = rotl64_23(h)*prime64x2 + prime64x3
+
 		i += 4
 	}
 

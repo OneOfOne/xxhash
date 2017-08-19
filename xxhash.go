@@ -3,19 +3,19 @@ package xxhash
 const (
 	debug = false // set to true to debug len/cap errors
 
-	prime32x1 = 2654435761
-	prime32x2 = 2246822519
-	prime32x3 = 3266489917
-	prime32x4 = 668265263
-	prime32x5 = 374761393
+	prime32x1 uint32 = 2654435761
+	prime32x2 uint32 = 2246822519
+	prime32x3 uint32 = 3266489917
+	prime32x4 uint32 = 668265263
+	prime32x5 uint32 = 374761393
 
-	prime64x1 = 11400714785074694791
-	prime64x2 = 14029467366897019727
-	prime64x3 = 1609587929392839161
-	prime64x4 = 9650029242287828579
-	prime64x5 = 2870177450012600261
+	prime64x1 uint64 = 11400714785074694791
+	prime64x2 uint64 = 14029467366897019727
+	prime64x3 uint64 = 1609587929392839161
+	prime64x4 uint64 = 9650029242287828579
+	prime64x5 uint64 = 2870177450012600261
 
-	maxInt32 = 1<<32 - 1
+	maxInt32 int32 = (1<<31 - 1)
 )
 
 // Checksum32 returns the checksum of the input data with the seed set to 0.
