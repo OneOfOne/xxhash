@@ -14,6 +14,8 @@ const (
 	prime64x3 = 1609587929392839161
 	prime64x4 = 9650029242287828579
 	prime64x5 = 2870177450012600261
+
+	maxInt32 = 1<<32 - 1
 )
 
 // Checksum32 returns the checksum of the input data with the seed set to 0.
@@ -69,7 +71,7 @@ func (xx *XXHash32) Reset() {
 }
 
 func (xx *XXHash32) WriteString(s string) (int, error) {
-	return writeString(xx, s)
+	return writeString32(xx, s)
 }
 
 // Sum appends the current hash to b and returns the resulting slice.
@@ -133,7 +135,7 @@ func (xx *XXHash64) Reset() {
 }
 
 func (xx *XXHash64) WriteString(s string) (int, error) {
-	return writeString(xx, s)
+	return writeString64(xx, s)
 }
 
 // Sum appends the current hash to b and returns the resulting slice.

@@ -1,6 +1,8 @@
 package xxhash_test
 
 import (
+	"bytes"
+	"encoding/binary"
 	"hash/adler32"
 	"hash/crc32"
 	"hash/crc64"
@@ -70,6 +72,57 @@ func TestWriteStringNil(t *testing.T) {
 		h64.WriteString("")
 	}
 	_, _ = h32.Sum32(), h64.Sum64()
+}
+
+// Shamelessly copied from https://github.com/cespare/xxhash/blob/5c37fe3735342a2e0d01c87a907579987c8936cc/xxhash_test.go#L28
+func TestSum(t *testing.T) {
+	for i, tt := range []struct {
+		input string
+		want  uint64
+	}{
+		{"", 0xef46db3751d8e999},
+		{"a", 0xd24ec4f1a98c6e5b},
+		{"as", 0x1c330fb2d66be179},
+		{"asd", 0x631c37ce72a97393},
+		{"asdf", 0x415872f599cea71e},
+		{
+			// Exactly 63 characters, which exercises all code paths.
+			"Call me Ishmael. Some years ago--never mind how long precisely-",
+			0x02a2e85470d6fd96,
+		},
+	} {
+		for chunkSize := 1; chunkSize <= len(tt.input); chunkSize++ {
+			x := xxhash.New64()
+			for j := 0; j < len(tt.input); j += chunkSize {
+				end := j + chunkSize
+				if end > len(tt.input) {
+					end = len(tt.input)
+				}
+				chunk := []byte(tt.input[j:end])
+				n, err := x.Write(chunk)
+				if err != nil || n != len(chunk) {
+					t.Fatalf("[i=%d,chunkSize=%d] Write: got (%d, %v); want (%d, nil)",
+						i, chunkSize, n, err, len(chunk))
+				}
+			}
+			if got := x.Sum64(); got != tt.want {
+				t.Fatalf("[i=%d,chunkSize=%d] got 0x%x; want 0x%x",
+					i, chunkSize, got, tt.want)
+			}
+			var b [8]byte
+			binary.BigEndian.PutUint64(b[:], tt.want)
+			if got := x.Sum(nil); !bytes.Equal(got, b[:]) {
+				t.Fatalf("[i=%d,chunkSize=%d] Sum: got %v; want %v",
+					i, chunkSize, got, b[:])
+			}
+		}
+		if got := xxhash.Checksum64([]byte(tt.input)); got != tt.want {
+			t.Fatalf("[i=%d] Checksum64: got 0x%x; want 0x%x", i, got, tt.want)
+		}
+		if got := xxhash.ChecksumString64(tt.input); got != tt.want {
+			t.Fatalf("[i=%d] ChecksumString64: got 0x%x; want 0x%x", i, got, tt.want)
+		}
+	}
 }
 
 func BenchmarkXXChecksum32(b *testing.B) {

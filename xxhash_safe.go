@@ -2,8 +2,6 @@
 
 package xxhash
 
-import "io"
-
 // Backend returns the current version of xxhash being used.
 const Backend = "GoSafe"
 
@@ -15,7 +13,17 @@ func ChecksumString64S(s string, seed uint64) uint64 {
 	return Checksum64S([]byte(s), seed)
 }
 
-func writeString(w io.Writer, s string) (int, error) {
+func writeString32(w *XXHash32, s string) (int, error) {
+	if len(s) == 0 {
+		return 0, nil
+	}
+	return w.Write([]byte(s))
+}
+
+func writeString64(w *XXHash64, s string) (int, error) {
+	if len(s) == 0 {
+		return 0, nil
+	}
 	return w.Write([]byte(s))
 }
 

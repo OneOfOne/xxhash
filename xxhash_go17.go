@@ -186,7 +186,7 @@ func Checksum64S(in []byte, seed uint64) uint64 {
 	// }
 
 	if i < len(in)-3 {
-		h ^= uint64((*(*[]uint64)(unsafe.Pointer(&in)))[0]) * prime64x1
+		h ^= uint64((*(*[]uint32)(unsafe.Pointer(&in)))[0]) * prime64x1
 		h = rotl64_23(h)*prime64x2 + prime64x3
 		i += 4
 	}
@@ -200,6 +200,9 @@ func Checksum64S(in []byte, seed uint64) uint64 {
 }
 
 func (xx *XXHash64) Write(in []byte) (n int, err error) {
+	if len(in) == 0 {
+		return
+	}
 	var i, ml = 0, int(xx.memIdx)
 	n = len(in)
 	xx.ln += uint64(n)
@@ -258,7 +261,7 @@ func (xx *XXHash64) Write(in []byte) (n int, err error) {
 	return
 }
 
-func (xx *XXHash64) Sum64() (h uint64) {
+func (xx XXHash64) Sum64() (h uint64) {
 	var i int32
 	v1, v2, v3, v4 := xx.v1, xx.v2, xx.v3, xx.v4
 	if xx.ln > 31 {
