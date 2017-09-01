@@ -13,7 +13,7 @@ This is a native Go implementation of the excellent [xxhash](https://github.com/
 * On Go 1.7+ the pure go version is faster than CGO for all inputs.
 * Supports ChecksumString{32,64} xxhash{32,64}.WriteString, which uses no copies when it can, falls back to copy on appengine.
 * The native version falls back to a less optimized version on appengine due to the lack of unsafe.
-* Almost as fast as the mostly pure assembly version written by the briliant [cespare](https://github.com/cespare/xxhash), while also supporting seeds.
+* Almost as fast as the mostly pure assembly version written by the brilliant [cespare](https://github.com/cespare/xxhash), while also supporting seeds.
 * To manually toggle the appengine version build with `-tags safe`.
 
 ## Benchmark
