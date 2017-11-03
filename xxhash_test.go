@@ -167,14 +167,14 @@ func BenchmarkXXSum64EvenPoint(b *testing.B) {
 		b.SkipNow()
 	}
 
-	for j := 256; j < len(in); j += 256 {
-		block := in[:j]
-		b.Run("Func/"+strconv.Itoa(j), func(b *testing.B) {
+	for i := 256; i < len(in); i += 256 {
+		block := in[:i]
+		b.Run("Func/"+strconv.Itoa(i), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				xxhash.Checksum64(block)
 			}
 		})
-		b.Run("Struct/"+strconv.Itoa(j), func(b *testing.B) {
+		b.Run("Struct/"+strconv.Itoa(i), func(b *testing.B) {
 			h := xxhash.New64()
 			for i := 0; i < b.N; i++ {
 				h.Write(block)
