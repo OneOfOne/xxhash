@@ -50,7 +50,7 @@ func (xx *XXHash64) WriteString(s string) (int, error) {
 func checksum64(in []byte, seed uint64) uint64 {
 	var (
 		wordsLen = len(in) >> 3
-		words    = ((*[maxInt32]uint64)(unsafe.Pointer(&in[0])))[:wordsLen:wordsLen]
+		words    = ((*[maxInt32 / 8]uint64)(unsafe.Pointer(&in[0])))[:wordsLen:wordsLen]
 
 		h uint64 = prime64x5
 
@@ -82,7 +82,7 @@ func checksum64(in []byte, seed uint64) uint64 {
 		h = rotl64_27(h)*prime64x1 + prime64x4
 	}
 
-	if in = in[wordsLen<<3 : len(in):len(in)]; len(in) > 3 {
+	if in = in[wordsLen<<3 : len(in) : len(in)]; len(in) > 3 {
 		words := (*[1]uint32)(unsafe.Pointer(&in[0]))
 		h ^= uint64(words[0]) * prime64x1
 		h = rotl64_23(h)*prime64x2 + prime64x3
@@ -107,7 +107,7 @@ func checksum64Short(in []byte, seed uint64) uint64 {
 	if len(in) > 7 {
 		var (
 			wordsLen = len(in) >> 3
-			words    = ((*[maxInt32]uint64)(unsafe.Pointer(&in[0])))[:wordsLen:wordsLen]
+			words    = ((*[maxInt32 / 8]uint64)(unsafe.Pointer(&in[0])))[:wordsLen:wordsLen]
 		)
 
 		for i := range words {
@@ -208,7 +208,7 @@ func (xx *XXHash64) Sum64() (h uint64) {
 	var (
 		in       = xx.mem[:xx.memIdx:xx.memIdx]
 		wordsLen = len(in) >> 3
-		words    = ((*[maxInt32]uint64)(unsafe.Pointer(&in[0])))[:wordsLen:wordsLen]
+		words    = ((*[maxInt32 / 8]uint64)(unsafe.Pointer(&in[0])))[:wordsLen:wordsLen]
 	)
 
 	for _, k := range words {
@@ -216,7 +216,7 @@ func (xx *XXHash64) Sum64() (h uint64) {
 		h = rotl64_27(h)*prime64x1 + prime64x4
 	}
 
-	if in = in[wordsLen<<3 : len(in):len(in)]; len(in) > 3 {
+	if in = in[wordsLen<<3 : len(in) : len(in)]; len(in) > 3 {
 		words := (*[1]uint32)(unsafe.Pointer(&in[0]))
 
 		h ^= uint64(words[0]) * prime64x1
