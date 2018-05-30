@@ -6,7 +6,7 @@ This is a native Go implementation of the excellent [xxhash](https://github.com/
 
 ## Install
 
-	go get github.com/OneOfOne/xxhash
+    go get github.com/OneOfOne/xxhash
 
 ## Features
 
@@ -17,6 +17,7 @@ This is a native Go implementation of the excellent [xxhash](https://github.com/
 * To manually toggle the appengine version build with `-tags safe`.
 
 ## Benchmark
+
 ### Core i7-4790 @ 3.60GHz, Linux 4.12.6-1-ARCH (64bit), Go tip (+ff90f4af66 2017-08-19)
 
 ```bash
@@ -51,6 +52,8 @@ Fnv64Short-8                  74.7ns ± 8%
 ```
 
 ## Usage
+
+```go
 	h := xxhash.New64()
 	// r, err := os.Open("......")
 	// defer f.Close()
@@ -58,11 +61,14 @@ Fnv64Short-8                  74.7ns ± 8%
 	io.Copy(h, r)
 	fmt.Println("xxhash.Backend:", xxhash.Backend)
 	fmt.Println("File checksum:", h.Sum64())
+```
 
 [<kbd>playground</kbd>](http://play.golang.org/p/rhRN3RdQyd)
 
 ## TODO
+
 * Rewrite the 32bit version to be more optimized.
+* General cleanup as the Go inliner gets smarter.
 
 ## License
 
