@@ -48,7 +48,6 @@ CRC64ISOShort-8               22.2ns ± 3%
 
 Fnv64-8                       2.34µs ± 1%
 Fnv64Short-8                  74.7ns ± 8%
-#
 ```
 
 ## Usage
@@ -72,4 +71,4 @@ Fnv64Short-8                  74.7ns ± 8%
 
 ## License
 
-This project is released under the Apache v2. licence. See [LICENSE](LICENSE) for more details.
+This project is released under the Apache v2. license. See [LICENSE](LICENSE) for more details.
