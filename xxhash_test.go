@@ -2,12 +2,15 @@ package xxhash_test
 
 import (
 	"bytes"
+	"encoding"
 	"encoding/binary"
+	"hash"
 	"hash/adler32"
 	"hash/crc32"
 	"hash/crc64"
 	"hash/fnv"
 	"os"
+	"reflect"
 	"strconv"
 	"testing"
 
@@ -114,6 +117,59 @@ func TestSum64(t *testing.T) {
 		if got := xxhash.ChecksumString64(tt.input); got != tt.want {
 			t.Fatalf("[i=%d] ChecksumString64: got 0x%x; want 0x%x", i, got, tt.want)
 		}
+	}
+}
+
+func TestBinaryMarshaling(t *testing.T) {
+	tests := []struct {
+		name string
+		h    func() hash.Hash
+	}{
+		{name: "xxhash32", h: xxhash.NewHash32},
+		{name: "xxhash64", h: xxhash.NewHash64},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			d := test.h()
+			d.Write([]byte("abc"))
+
+			b, err := d.(encoding.BinaryMarshaler).MarshalBinary()
+			if err != nil {
+				t.Fatal(err)
+			}
+			d = test.h()
+			d.Write([]byte("junk"))
+			if err := d.(encoding.BinaryUnmarshaler).UnmarshalBinary(b); err != nil {
+				t.Fatal(err)
+			}
+			d.Write([]byte("def"))
+
+			expected := test.h()
+			expected.Write([]byte("abcdef"))
+			if got, want := d.Sum(nil), expected.Sum(nil); !reflect.DeepEqual(got, want) {
+				t.Fatalf("after MarshalBinary+UnmarshalBinary, got 0x%x; want 0x%x", got, want)
+			}
+
+			d0 := test.h()
+			d1 := test.h()
+			for i := 0; i < 64; i++ {
+				b, err := d0.(encoding.BinaryMarshaler).MarshalBinary()
+				if err != nil {
+					t.Fatal(err)
+				}
+				d0 = test.h()
+				if err := d0.(encoding.BinaryUnmarshaler).UnmarshalBinary(b); err != nil {
+					t.Fatal(err)
+				}
+				if got, want := d0.Sum(nil), d1.Sum(nil); !reflect.DeepEqual(got, want) {
+					t.Fatalf("after %d Writes, unmarshaled hash gave sum 0x%x; want 0x%x", i, got, want)
+				}
+
+				d0.Write([]byte{'a'})
+				d1.Write([]byte{'a'})
+			}
+		})
 	}
 }
 

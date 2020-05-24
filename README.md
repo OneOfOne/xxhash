@@ -72,4 +72,4 @@ Fnv64Short-8                  74.7ns ± 8%
 
 ## License
 
-This project is released under the Apache v2. licence. See [LICENCE](LICENCE) for more details.
+This project is released under the Apache v2. licence. See [LICENSE](LICENSE) for more details.
