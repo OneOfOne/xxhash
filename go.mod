@@ -1,3 +1,3 @@
-module github.com/wanghaao/xxhash
+module github.com/OneOfOne/xxhash
 
 go 1.11
