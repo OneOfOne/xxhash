@@ -48,6 +48,24 @@ func ChecksumString32(s string) uint32 {
 	return ChecksumString32S(s, 0)
 }
 
+func XXHash32Val(in *[]byte, seed uint32) uint32 {
+	xx := &XXHash32{
+		seed: seed,
+	}
+	xx.Reset()
+	_, _ = xx.Write(*in)
+	return xx.Sum32()
+}
+
+func XXHash64Val(in *[]byte, seed uint64) uint64 {
+	xx := &XXHash64{
+		seed: seed,
+	}
+	xx.Reset()
+	_, _ = xx.Write(*in)
+	return xx.Sum64()
+}
+
 type XXHash32 struct {
 	mem            [16]byte
 	ln, memIdx     int32
